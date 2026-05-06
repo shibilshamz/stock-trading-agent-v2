@@ -165,12 +165,80 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
 
 
 # ---------------------------------------------------------------------------
-# Main loop
+# Single-cycle mode (GitHub Actions)
+# ---------------------------------------------------------------------------
+
+def run_once():
+    """
+    Execute exactly one scan cycle and exit.
+    Called when GITHUB_ACTIONS=true — the cron schedule is handled externally.
+    No persistent state between runs: universe is refreshed each invocation,
+    and paper_state.json is not cached across Actions jobs.
+    """
+    now        = ist_now()
+    now_time   = now.time()
+    market_day = now.weekday() < 5
+
+    logger.info("GitHub Actions mode — single scan cycle (%s IST)", now.strftime("%H:%M"))
+
+    if not market_day:
+        logger.info("Weekend — no trading. Exiting.")
+        return
+
+    if not is_market_open():
+        logger.info("Market closed at %s IST — no action. Exiting.", now.strftime("%H:%M"))
+        return
+
+    trader = PaperTrader(PAPER_BALANCE)
+
+    try:
+        universe = get_trading_universe()
+    except Exception as exc:
+        logger.error("Universe scan failed: %s", exc)
+        alert_error("universe_scan", str(exc))
+        return
+
+    # Morning reset: first 15-minute window after market open (09:15–09:30 IST)
+    morning_open_t = parse_ist_time(MARKET_OPEN_TIME)
+    morning_end_t  = parse_ist_time("09:30")
+    if morning_open_t <= now_time <= morning_end_t:
+        trader.reset_daily_pnl()
+        alert_startup(universe, trader.cash)
+
+    with AIEngine() as ai:
+        try:
+            run_scan(trader, ai, universe)
+        except Exception as exc:
+            logger.error("Scan error: %s", exc)
+            alert_error("run_scan", str(exc))
+
+        # EOD: close all open positions on the final scan of the day
+        eod_t = parse_ist_time(EOD_SUMMARY_TIME)
+        if now_time >= eod_t and trader.positions:
+            logger.info("EOD: force-closing all positions")
+            prices = {}
+            for sym in list(trader.positions.keys()):
+                p = latest_price(sym)
+                if p:
+                    prices[sym] = p
+            trader.close_all_positions(prices, reason="EOD")
+            alert_daily_summary(trader.portfolio_snapshot({}))
+
+    logger.info("GitHub Actions scan complete — exiting cleanly.")
+
+
+# ---------------------------------------------------------------------------
+# Main loop (Railway / local)
 # ---------------------------------------------------------------------------
 
 def main():
     logger.info("=" * 60)
     logger.info("Stock Trading Agent v2 starting up …")
+
+    # GitHub Actions runs one scan cycle per invocation; scheduling is external
+    if os.getenv("GITHUB_ACTIONS") == "true":
+        run_once()
+        return
 
     trader = PaperTrader(PAPER_BALANCE)
     ai     = AIEngine()

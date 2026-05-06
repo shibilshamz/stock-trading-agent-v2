@@ -13,7 +13,10 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 PAPER_BALANCE = 50_000          # ₹ starting capital
 MAX_OPEN_POSITIONS = 5          # concurrent trades
-POSITION_SIZE_PCT = 0.10        # 10 % of balance per trade
+# Cash cap upper bound per trade — primary sizing is ATR risk-based (MAX_RISK_PER_TRADE_PCT).
+# This only binds when the ATR method would exceed it, or when stock price is high
+# relative to balance (e.g. ₹3,200 stock on ₹50,000 balance needs ≥20% to get >1 share).
+POSITION_SIZE_PCT = 0.20        # 20 % of balance per trade (cash cap)
 MAX_DAILY_LOSS_PCT = 0.03       # halt after -3 % drawdown on the day
 
 # ---------------------------------------------------------------------------
