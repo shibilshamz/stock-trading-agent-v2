@@ -5,6 +5,7 @@ Combines technical signals + news sentiment into a final trade decision.
 
 import json
 import logging
+import time
 from typing import Optional
 
 import httpx
@@ -19,6 +20,9 @@ from config import (
 )
 
 logger = logging.getLogger(__name__)
+
+_RATE_LIMIT_GAP = 2.0   # minimum seconds between successive Groq API calls
+_RETRY_WAIT_429 = 5.0   # seconds to wait after a 429 before the single retry
 
 _SYSTEM_PROMPT = """You are an expert NSE intraday trading analyst.
 You receive structured JSON data about a stock and return a JSON trading decision.
@@ -76,6 +80,7 @@ class AIEngine:
             },
             timeout=20.0,
         )
+        self._last_call_time: float = 0.0  # monotonic timestamp of the last API call
 
     def decide(
         self,
@@ -113,20 +118,16 @@ class AIEngine:
             return self._rule_based_fallback(technical, sentiment)
 
         try:
-            resp = self.client.post(
-                "/chat/completions",
-                json={
-                    "model": GROQ_MODEL,
-                    "messages": [
-                        {"role": "system", "content": _SYSTEM_PROMPT},
-                        {"role": "user",   "content": prompt},
-                    ],
-                    "max_tokens":  AI_MAX_TOKENS,
-                    "temperature": AI_TEMPERATURE,
-                    "response_format": {"type": "json_object"},
-                },
-            )
-            resp.raise_for_status()
+            resp = self._call_groq({
+                "model": GROQ_MODEL,
+                "messages": [
+                    {"role": "system", "content": _SYSTEM_PROMPT},
+                    {"role": "user",   "content": prompt},
+                ],
+                "max_tokens":  AI_MAX_TOKENS,
+                "temperature": AI_TEMPERATURE,
+                "response_format": {"type": "json_object"},
+            })
             content = resp.json()["choices"][0]["message"]["content"]
             decision = json.loads(content)
 
@@ -145,6 +146,33 @@ class AIEngine:
         except Exception as exc:
             logger.error("Groq API error for %s: %s — using fallback", symbol, exc)
             return self._rule_based_fallback(technical, sentiment)
+
+    def _call_groq(self, payload: dict) -> httpx.Response:
+        """
+        POST to Groq with two protections:
+          1. Rate limiter  — enforces _RATE_LIMIT_GAP seconds between calls so
+             scanning 20 stocks back-to-back doesn't burst the API.
+          2. 429 retry     — waits _RETRY_WAIT_429 seconds and retries once before
+             letting the exception propagate to the rule-based fallback.
+        """
+        gap = time.monotonic() - self._last_call_time
+        if gap < _RATE_LIMIT_GAP:
+            time.sleep(_RATE_LIMIT_GAP - gap)
+
+        self._last_call_time = time.monotonic()
+        resp = self.client.post("/chat/completions", json=payload)
+
+        if resp.status_code == 429:
+            logger.warning(
+                "Groq 429 rate limit hit — waiting %.0fs and retrying once",
+                _RETRY_WAIT_429,
+            )
+            time.sleep(_RETRY_WAIT_429)
+            self._last_call_time = time.monotonic()
+            resp = self.client.post("/chat/completions", json=payload)
+
+        resp.raise_for_status()
+        return resp
 
     @staticmethod
     def _rule_based_fallback(technical: dict, sentiment: dict) -> dict:
