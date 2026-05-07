@@ -136,7 +136,8 @@ class AIEngine:
                 if key not in decision:
                     raise ValueError(f"Missing key: {key}")
 
-            decision["action"] = decision["action"].upper()
+            decision["action"]    = decision["action"].upper()
+            decision["ai_source"] = "groq"
             logger.info(
                 "AI decision for %s: %s (conf=%.2f) | %s",
                 symbol, decision["action"], decision["confidence"], decision["reason"],
@@ -195,6 +196,7 @@ class AIEngine:
             "confidence": round(conf, 2),
             "reason":     "Rule-based fallback (Groq unavailable).",
             "risk_note":  "AI unavailable; signals may be incomplete.",
+            "ai_source":  "fallback",
         }
 
     def close(self):

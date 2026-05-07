@@ -145,7 +145,12 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
                 )
 
                 if params:
-                    opened = trader.open_position(params)
+                    opened = trader.open_position(
+                        params,
+                        confidence=decision.get("confidence", 0.0),
+                        ai_source=decision.get("ai_source", "fallback"),
+                        composite_score=tech.get("composite_score", 0.0),
+                    )
                     if opened:
                         alert_trade_opened(
                             symbol=sym,

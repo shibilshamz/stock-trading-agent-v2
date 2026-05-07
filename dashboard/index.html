@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NSE Trading Agent — Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    :root {
+      --bg:       #0f1117;
+      --surface:  #1a1d27;
+      --border:   #2a2d3e;
+      --text:     #e2e8f0;
+      --muted:    #8892a4;
+      --green:    #22c55e;
+      --red:      #ef4444;
+      --blue:     #3b82f6;
+      --yellow:   #f59e0b;
+      --radius:   10px;
+    }
+    [data-theme="light"] {
+      --bg:      #f1f5f9;
+      --surface: #ffffff;
+      --border:  #e2e8f0;
+      --text:    #1e293b;
+      --muted:   #64748b;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: .02em; }
+    header small { color: var(--muted); font-size: .75rem; }
+    .theme-btn {
+      background: var(--border);
+      border: none;
+      color: var(--text);
+      padding: .4rem .8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: .8rem;
+    }
+    main { padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+
+    /* Stats cards */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+    }
+    .card .label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .4rem; }
+    .card .value { font-size: 1.5rem; font-weight: 700; }
+    .card .value.pos { color: var(--green); }
+    .card .value.neg { color: var(--red); }
+    .card .value.neu { color: var(--blue); }
+
+    /* Charts row */
+    .charts { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    @media (max-width: 720px) { .charts { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .chart-card h2 { font-size: .85rem; font-weight: 600; margin-bottom: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .chart-card canvas { max-height: 220px; }
+
+    /* Trade table */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .table-card h2 { font-size: .85rem; font-weight: 600; padding: 1rem 1.2rem .6rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    th { padding: .6rem 1rem; text-align: left; color: var(--muted); font-weight: 500; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    td { padding: .6rem 1rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,.03); }
+    .badge {
+      display: inline-block;
+      padding: .15rem .5rem;
+      border-radius: 4px;
+      font-size: .7rem;
+      font-weight: 600;
+    }
+    .badge.BUY  { background: rgba(34,197,94,.15);  color: var(--green); }
+    .badge.SELL { background: rgba(239,68,68,.15);  color: var(--red); }
+    .badge.OPEN   { background: rgba(59,130,246,.15); color: var(--blue); }
+    .badge.CLOSED { background: rgba(100,116,139,.15); color: var(--muted); }
+    .pos { color: var(--green); }
+    .neg { color: var(--red); }
+    .empty { text-align: center; padding: 2rem; color: var(--muted); font-size: .85rem; }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>NSE Trading Agent</h1>
+    <small id="updated">Loading…</small>
+  </div>
+  <button class="theme-btn" onclick="toggleTheme()">Toggle Theme</button>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="card"><div class="label">Balance</div><div class="value neu" id="s-balance">—</div></div>
+    <div class="card"><div class="label">Total Return</div><div class="value" id="s-return">—</div></div>
+    <div class="card"><div class="label">Realised P&L</div><div class="value" id="s-pnl">—</div></div>
+    <div class="card"><div class="label">Win Rate</div><div class="value neu" id="s-winrate">—</div></div>
+    <div class="card"><div class="label">Total Trades</div><div class="value neu" id="s-trades">—</div></div>
+    <div class="card"><div class="label">Open Positions</div><div class="value neu" id="s-open">—</div></div>
+  </div>
+
+  <div class="charts">
+    <div class="chart-card">
+      <h2>Cumulative P&L (closed trades)</h2>
+      <canvas id="pnl-chart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h2>Trades by Action</h2>
+      <canvas id="action-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <h2>Trade History</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Time (IST)</th>
+            <th>Symbol</th>
+            <th>Action</th>
+            <th>Status</th>
+            <th>Entry</th>
+            <th>Stop</th>
+            <th>Target</th>
+            <th>Qty</th>
+            <th>Confidence</th>
+            <th>AI Source</th>
+            <th>Score</th>
+            <th>P&L</th>
+          </tr>
+        </thead>
+        <tbody id="trade-body"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ---------------------------------------------------------------------------
+  // Config — change REPO to your GitHub username/repo
+  // ---------------------------------------------------------------------------
+  const REPO     = window.location.hostname === 'localhost'
+    ? null
+    : window.location.hostname.replace('.github.io', '') + '/' +
+      window.location.pathname.split('/').filter(Boolean)[0];
+  const CSV_URL  = REPO
+    ? `https://raw.githubusercontent.com/${REPO}/master/logs/trades.csv`
+    : '../logs/trades.csv';
+
+  // ---------------------------------------------------------------------------
+  // Theme
+  // ---------------------------------------------------------------------------
+  const saved = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  function toggleTheme() {
+    const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t);
+    renderCharts(window._rows);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+  const fmt  = n => '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  const fmtN = n => Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  const pct  = n => (n >= 0 ? '+' : '') + Number(n).toFixed(2) + '%';
+
+  function colorClass(v) { return v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
+
+  // ---------------------------------------------------------------------------
+  // Charts (Chart.js)
+  // ---------------------------------------------------------------------------
+  let pnlChart, actionChart;
+
+  function renderCharts(rows) {
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    const grid   = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.08)';
+    const tick   = isDark ? '#8892a4' : '#64748b';
+
+    const closed = rows.filter(r => r.status === 'CLOSED').sort(
+      (a, b) => new Date(a.timestamp_ist) - new Date(b.timestamp_ist)
+    );
+
+    // Cumulative P&L line
+    let cumPnl = 0;
+    const pnlData  = closed.map(r => { cumPnl += +r.pnl; return cumPnl; });
+    const pnlLabels = closed.map(r => r.timestamp_ist.slice(0, 16));
+
+    const pnlColors = pnlData.map(v => v >= 0 ? '#22c55e' : '#ef4444');
+
+    if (pnlChart) pnlChart.destroy();
+    pnlChart = new Chart(document.getElementById('pnl-chart'), {
+      type: 'line',
+      data: {
+        labels: pnlLabels,
+        datasets: [{
+          data:              pnlData,
+          borderColor:       '#3b82f6',
+          backgroundColor:   'rgba(59,130,246,.08)',
+          pointBackgroundColor: pnlColors,
+          pointRadius:       3,
+          tension:           0.3,
+          fill:              true,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { display: false },
+          y: {
+            grid: { color: grid },
+            ticks: { color: tick, callback: v => '₹' + v.toLocaleString('en-IN') },
+          },
+        },
+      },
+    });
+
+    // Actions bar chart
+    const buys  = rows.filter(r => r.action === 'BUY').length;
+    const sells = rows.filter(r => r.action === 'SELL').length;
+
+    if (actionChart) actionChart.destroy();
+    actionChart = new Chart(document.getElementById('action-chart'), {
+      type: 'bar',
+      data: {
+        labels: ['BUY', 'SELL'],
+        datasets: [{
+          data:            [buys, sells],
+          backgroundColor: ['rgba(34,197,94,.7)', 'rgba(239,68,68,.7)'],
+          borderRadius:    6,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: tick } },
+          y: { grid: { color: grid }, ticks: { color: tick, stepSize: 1 } },
+        },
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Stats cards
+  // ---------------------------------------------------------------------------
+  function renderStats(rows) {
+    const STARTING = 50000;
+    const closed = rows.filter(r => r.status === 'CLOSED');
+    const open   = rows.filter(r => r.status === 'OPEN');
+
+    const realisedPnl = closed.reduce((s, r) => s + +r.pnl, 0);
+    const balance     = STARTING + realisedPnl;
+    const returnPct   = (realisedPnl / STARTING) * 100;
+    const wins        = closed.filter(r => +r.pnl > 0).length;
+    const winRate     = closed.length ? (wins / closed.length * 100).toFixed(1) : '—';
+
+    const el = id => document.getElementById(id);
+    el('s-balance').textContent = fmt(balance);
+    el('s-return').textContent  = pct(returnPct);
+    el('s-return').className    = 'value ' + (returnPct >= 0 ? 'pos' : 'neg');
+    el('s-pnl').textContent     = fmt(realisedPnl);
+    el('s-pnl').className       = 'value ' + (realisedPnl >= 0 ? 'pos' : 'neg');
+    el('s-winrate').textContent = winRate + (winRate !== '—' ? '%' : '');
+    el('s-trades').textContent  = closed.length;
+    el('s-open').textContent    = open.length;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Trade table
+  // ---------------------------------------------------------------------------
+  function renderTable(rows) {
+    const tbody = document.getElementById('trade-body');
+    const sorted = [...rows].sort(
+      (a, b) => new Date(b.timestamp_ist) - new Date(a.timestamp_ist)
+    );
+
+    if (!sorted.length) {
+      tbody.innerHTML = '<tr><td colspan="12" class="empty">No trades yet — the agent hasn\'t executed any signals.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = sorted.map(r => {
+      const pnl    = +r.pnl;
+      const pnlStr = r.status === 'OPEN' ? '—' : (pnl >= 0 ? '+' : '') + fmt(pnl);
+      const pnlCls = r.status === 'OPEN' ? '' : colorClass(pnl);
+      return `<tr>
+        <td>${r.timestamp_ist}</td>
+        <td><strong>${r.symbol}</strong></td>
+        <td><span class="badge ${r.action}">${r.action}</span></td>
+        <td><span class="badge ${r.status}">${r.status}</span></td>
+        <td>₹${fmtN(r.entry_price)}</td>
+        <td>₹${fmtN(r.stop_loss)}</td>
+        <td>₹${fmtN(r.target)}</td>
+        <td>${r.quantity}</td>
+        <td>${(+r.confidence * 100).toFixed(0)}%</td>
+        <td>${r.ai_source}</td>
+        <td>${(+r.composite_score).toFixed(3)}</td>
+        <td class="${pnlCls}">${pnlStr}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Load CSV
+  // ---------------------------------------------------------------------------
+  async function load() {
+    try {
+      const resp = await fetch(CSV_URL + '?t=' + Date.now());
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const text = await resp.text();
+
+      Papa.parse(text, {
+        header:          true,
+        skipEmptyLines:  true,
+        complete({ data }) {
+          window._rows = data;
+          renderStats(data);
+          renderCharts(data);
+          renderTable(data);
+          document.getElementById('updated').textContent =
+            'Last updated: ' + new Date().toLocaleTimeString('en-IN');
+        },
+      });
+    } catch (e) {
+      document.getElementById('updated').textContent = 'Error loading data: ' + e.message;
+      document.getElementById('trade-body').innerHTML =
+        '<tr><td colspan="12" class="empty">Could not load trades.csv — ' + e.message + '</td></tr>';
+    }
+  }
+
+  load();
+  setInterval(load, 60_000);   // auto-refresh every 60 s
+</script>
+</body>
+</html>

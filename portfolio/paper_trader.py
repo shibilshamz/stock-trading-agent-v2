@@ -2,20 +2,32 @@
 Paper trading engine.
 Maintains positions, cash balance, P&L, and trade history in memory.
 Persists state to logs/paper_state.json so restarts don't reset the book.
+Appends every open/close event to logs/trades.csv for the dashboard.
 """
 
+import csv
 import json
 import logging
 import os
 from datetime import datetime
 from typing import Optional
 
+import pytz
+
 from config import LOG_DIR, PAPER_BALANCE
 from risk.sizing import TradeParams, check_stop_or_target
 
 logger = logging.getLogger(__name__)
 
-STATE_FILE = os.path.join(LOG_DIR, "paper_state.json")
+STATE_FILE  = os.path.join(LOG_DIR, "paper_state.json")
+TRADES_CSV  = os.path.join(LOG_DIR, "trades.csv")
+_IST        = pytz.timezone("Asia/Kolkata")
+
+_CSV_HEADERS = [
+    "timestamp_ist", "symbol", "action", "entry_price", "quantity",
+    "stop_loss", "target", "confidence", "ai_source", "composite_score",
+    "status", "pnl",
+]
 
 
 class PaperTrader:
@@ -31,7 +43,13 @@ class PaperTrader:
     # Public API
     # ------------------------------------------------------------------
 
-    def open_position(self, params: TradeParams) -> bool:
+    def open_position(
+        self,
+        params: TradeParams,
+        confidence: float = 0.0,
+        ai_source: str = "unknown",
+        composite_score: float = 0.0,
+    ) -> bool:
         """
         Open a new paper position.
         Returns True on success, False if insufficient cash or already open.
@@ -49,16 +67,34 @@ class PaperTrader:
 
         self.cash -= params.position_value
         self.positions[params.symbol] = {
-            "symbol":         params.symbol,
-            "action":         params.action,
-            "entry_price":    params.entry_price,
-            "stop_loss":      params.stop_loss,
-            "take_profit":    params.take_profit,
-            "quantity":       params.quantity,
-            "position_value": params.position_value,
-            "risk_amount":    params.risk_amount,
-            "opened_at":      datetime.utcnow().isoformat(),
+            "symbol":          params.symbol,
+            "action":          params.action,
+            "entry_price":     params.entry_price,
+            "stop_loss":       params.stop_loss,
+            "take_profit":     params.take_profit,
+            "quantity":        params.quantity,
+            "position_value":  params.position_value,
+            "risk_amount":     params.risk_amount,
+            "opened_at":       datetime.utcnow().isoformat(),
+            "confidence":      confidence,
+            "ai_source":       ai_source,
+            "composite_score": composite_score,
         }
+
+        self._append_csv({
+            "timestamp_ist":   datetime.now(_IST).strftime("%Y-%m-%d %H:%M:%S"),
+            "symbol":          params.symbol,
+            "action":          params.action,
+            "entry_price":     params.entry_price,
+            "quantity":        params.quantity,
+            "stop_loss":       params.stop_loss,
+            "target":          params.take_profit,
+            "confidence":      round(confidence, 3),
+            "ai_source":       ai_source,
+            "composite_score": round(composite_score, 4),
+            "status":          "OPEN",
+            "pnl":             0.0,
+        })
 
         logger.info(
             "OPENED %s %s: %d shares @₹%.2f | cash left ₹%.0f",
@@ -87,18 +123,33 @@ class PaperTrader:
         else:
             pnl = (entry - exit_price) * qty
 
-        proceeds    = pos["position_value"] + pnl
-        self.cash  += proceeds
+        proceeds       = pos["position_value"] + pnl
+        self.cash     += proceeds
         self.daily_pnl += pnl
 
         trade = {
             **pos,
-            "exit_price":  round(exit_price, 2),
-            "pnl":         round(pnl, 2),
-            "reason":      reason,
-            "closed_at":   datetime.utcnow().isoformat(),
+            "exit_price": round(exit_price, 2),
+            "pnl":        round(pnl, 2),
+            "reason":     reason,
+            "closed_at":  datetime.utcnow().isoformat(),
         }
         self.trade_log.append(trade)
+
+        self._append_csv({
+            "timestamp_ist":   datetime.now(_IST).strftime("%Y-%m-%d %H:%M:%S"),
+            "symbol":          symbol,
+            "action":          action,
+            "entry_price":     entry,
+            "quantity":        qty,
+            "stop_loss":       pos["stop_loss"],
+            "target":          pos["take_profit"],
+            "confidence":      round(pos.get("confidence", 0.0), 3),
+            "ai_source":       pos.get("ai_source", "unknown"),
+            "composite_score": round(pos.get("composite_score", 0.0), 4),
+            "status":          "CLOSED",
+            "pnl":             round(pnl, 2),
+        })
 
         logger.info(
             "CLOSED %s: exit=₹%.2f | P&L=₹%.2f | reason=%s | balance=₹%.0f",
@@ -131,8 +182,8 @@ class PaperTrader:
         open_positions_detail = []
 
         for sym, pos in self.positions.items():
-            price = prices.get(sym, pos["entry_price"])
-            qty   = pos["quantity"]
+            price  = prices.get(sym, pos["entry_price"])
+            qty    = pos["quantity"]
             action = pos["action"]
 
             if action == "BUY":
@@ -142,13 +193,13 @@ class PaperTrader:
 
             unrealised += upnl
             open_positions_detail.append({
-                "symbol":    sym,
-                "action":    action,
-                "qty":       qty,
-                "entry":     pos["entry_price"],
-                "current":   price,
-                "upnl":      round(upnl, 2),
-                "stop_loss": pos["stop_loss"],
+                "symbol":      sym,
+                "action":      action,
+                "qty":         qty,
+                "entry":       pos["entry_price"],
+                "current":     price,
+                "upnl":        round(upnl, 2),
+                "stop_loss":   pos["stop_loss"],
                 "take_profit": pos["take_profit"],
             })
 
@@ -158,14 +209,14 @@ class PaperTrader:
         )
 
         return {
-            "cash":             round(self.cash, 2),
-            "total_value":      round(total_value, 2),
-            "unrealised_pnl":   round(unrealised, 2),
-            "daily_pnl":        round(self.daily_pnl, 2),
-            "open_positions":   len(self.positions),
+            "cash":                  round(self.cash, 2),
+            "total_value":           round(total_value, 2),
+            "unrealised_pnl":        round(unrealised, 2),
+            "daily_pnl":             round(self.daily_pnl, 2),
+            "open_positions":        len(self.positions),
             "open_positions_detail": open_positions_detail,
-            "total_trades":     len(self.trade_log),
-            "starting_balance": self.starting_balance,
+            "total_trades":          len(self.trade_log),
+            "starting_balance":      self.starting_balance,
             "return_pct": round(
                 (total_value - self.starting_balance) / self.starting_balance * 100, 2
             ),
@@ -184,16 +235,32 @@ class PaperTrader:
                 self.close_position(sym, price, reason=reason)
 
     # ------------------------------------------------------------------
+    # CSV logging
+    # ------------------------------------------------------------------
+
+    def _append_csv(self, row: dict):
+        os.makedirs(LOG_DIR, exist_ok=True)
+        write_header = not os.path.exists(TRADES_CSV) or os.path.getsize(TRADES_CSV) == 0
+        try:
+            with open(TRADES_CSV, "a", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=_CSV_HEADERS, extrasaction="ignore")
+                if write_header:
+                    writer.writeheader()
+                writer.writerow(row)
+        except Exception as exc:
+            logger.error("Failed to write trades.csv: %s", exc)
+
+    # ------------------------------------------------------------------
     # Persistence
     # ------------------------------------------------------------------
 
     def _save_state(self):
         os.makedirs(LOG_DIR, exist_ok=True)
         state = {
-            "cash":       self.cash,
-            "positions":  self.positions,
-            "trade_log":  self.trade_log,
-            "daily_pnl":  self.daily_pnl,
+            "cash":      self.cash,
+            "positions": self.positions,
+            "trade_log": self.trade_log,
+            "daily_pnl": self.daily_pnl,
         }
         try:
             with open(STATE_FILE, "w", encoding="utf-8") as f:

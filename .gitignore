@@ -24,9 +24,8 @@ ENV/
 *.env.local
 *.env.production
 
-# Logs & runtime state
+# Logs & runtime state  (trades.csv and paper_state.json are committed by the workflow)
 logs/agent.log
-logs/paper_state.json
 
 # Claude Code
 .claude/
