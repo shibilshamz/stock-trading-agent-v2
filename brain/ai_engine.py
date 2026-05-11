@@ -21,7 +21,7 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
-_RATE_LIMIT_GAP = 2.0   # minimum seconds between successive Groq API calls
+_RATE_LIMIT_GAP = 6.0   # minimum seconds between successive Groq API calls
 _RETRY_WAIT_429 = 5.0   # seconds to wait after a 429 before the single retry
 
 _SYSTEM_PROMPT = """You are an expert NSE intraday trading analyst.
