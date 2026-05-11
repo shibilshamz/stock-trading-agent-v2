@@ -226,16 +226,18 @@ def run_once():
             logger.error("Scan error: %s", exc)
             alert_error("run_scan", str(exc))
 
-        # EOD: close all open positions on the final scan of the day
+        # EOD: close all open positions and always send daily summary
         eod_t = parse_ist_time(EOD_SUMMARY_TIME)
-        if now_time >= eod_t and trader.positions:
-            logger.info("EOD: force-closing all positions")
-            prices = {}
-            for sym in list(trader.positions.keys()):
-                p = latest_price(sym)
-                if p:
-                    prices[sym] = p
-            trader.close_all_positions(prices, reason="EOD")
+        if now_time >= eod_t:
+            if trader.positions:
+                logger.info("EOD: force-closing all positions")
+                prices = {}
+                for sym in list(trader.positions.keys()):
+                    p = latest_price(sym)
+                    if p:
+                        prices[sym] = p
+                trader.close_all_positions(prices, reason="EOD")
+            logger.info("EOD: sending daily summary")
             alert_daily_summary(trader.portfolio_snapshot({}))
 
     logger.info("GitHub Actions scan complete — exiting cleanly.")
@@ -298,20 +300,18 @@ def main():
                 logger.error("Scan loop error: %s", exc)
                 alert_error("run_scan", str(exc))
 
-        # ---- EOD close all positions ----
+        # ---- EOD close all positions and always send daily summary ----
         eod_t = parse_ist_time(EOD_SUMMARY_TIME)
-        if (
-            market_day
-            and now_time >= eod_t
-            and trader.positions
-        ):
-            logger.info("EOD: force-closing all positions")
-            prices = {}
-            for sym in list(trader.positions.keys()):
-                p = latest_price(sym)
-                if p:
-                    prices[sym] = p
-            trader.close_all_positions(prices, reason="EOD")
+        if market_day and now_time >= eod_t:
+            if trader.positions:
+                logger.info("EOD: force-closing all positions")
+                prices = {}
+                for sym in list(trader.positions.keys()):
+                    p = latest_price(sym)
+                    if p:
+                        prices[sym] = p
+                trader.close_all_positions(prices, reason="EOD")
+            logger.info("EOD: sending daily summary")
             snap = trader.portfolio_snapshot({})
             alert_daily_summary(snap)
 
