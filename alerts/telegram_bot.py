@@ -135,4 +135,5 @@ def alert_startup(universe: list[str], balance: float) -> bool:
 
 
 def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S IST")
+    import pytz
+    return datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S IST")
