@@ -55,7 +55,7 @@ class PaperTrader:
         Returns True on success, False if insufficient cash or already open.
         """
         if params.symbol in self.positions:
-            logger.info("Already have an open position in %s — skipping", params.symbol)
+            logger.warning("Duplicate rejected: already have an open position in %s", params.symbol)
             return False
 
         if params.position_value > self.cash:
@@ -270,6 +270,7 @@ class PaperTrader:
 
     def _load_state(self):
         if not os.path.exists(STATE_FILE):
+            self._recover_positions_from_csv()
             return
         try:
             with open(STATE_FILE, "r", encoding="utf-8") as f:
@@ -283,4 +284,60 @@ class PaperTrader:
                 self.cash, len(self.positions),
             )
         except Exception as exc:
-            logger.error("Failed to load state: %s", exc)
+            logger.error("Failed to load state: %s — attempting CSV recovery", exc)
+            self._recover_positions_from_csv()
+
+    def _recover_positions_from_csv(self):
+        """
+        Rebuild open positions from trades.csv when paper_state.json is absent or corrupt.
+        Walks the CSV in order: an OPEN row adds the position, a subsequent CLOSED row
+        for the same symbol removes it.  Saves recovered state so the next run loads
+        normally from paper_state.json.
+        """
+        if not os.path.exists(TRADES_CSV):
+            return
+        try:
+            open_rows: dict = {}
+            realised_pnl = 0.0
+            with open(TRADES_CSV, "r", encoding="utf-8") as f:
+                for row in csv.DictReader(f):
+                    sym = row.get("symbol", "")
+                    if not sym:
+                        continue
+                    if row["status"] == "OPEN":
+                        open_rows[sym] = row
+                    elif row["status"] == "CLOSED":
+                        open_rows.pop(sym, None)
+                        realised_pnl += float(row.get("pnl") or 0)
+
+            if not open_rows:
+                return
+
+            for sym, row in open_rows.items():
+                entry = float(row["entry_price"])
+                qty   = int(row["quantity"])
+                self.positions[sym] = {
+                    "symbol":          sym,
+                    "action":          row["action"],
+                    "entry_price":     entry,
+                    "stop_loss":       float(row["stop_loss"]),
+                    "take_profit":     float(row["target"]),
+                    "quantity":        qty,
+                    "position_value":  round(entry * qty, 2),
+                    "risk_amount":     0.0,
+                    "opened_at":       row["timestamp_ist"],
+                    "confidence":      float(row.get("confidence") or 0),
+                    "ai_source":       row.get("ai_source", "unknown"),
+                    "composite_score": float(row.get("composite_score") or 0),
+                }
+
+            invested   = sum(p["position_value"] for p in self.positions.values())
+            self.cash  = self.starting_balance + realised_pnl - invested
+            logger.warning(
+                "paper_state.json missing — recovered %d open position(s) from trades.csv; "
+                "estimated cash ₹%.0f",
+                len(self.positions), self.cash,
+            )
+            self._save_state()
+        except Exception as exc:
+            logger.error("CSV recovery failed: %s", exc)
