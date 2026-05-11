@@ -89,6 +89,15 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
         if df is not None and not df.empty:
             prices[sym] = float(df["Close"].iloc[-1])
 
+    # Always fetch latest price for open positions not in the current universe
+    # so SL/TP checks are never silently skipped due to universe rotation.
+    for sym in list(trader.positions.keys()):
+        if sym not in prices:
+            p = latest_price(sym)
+            if p:
+                prices[sym] = p
+                logger.debug("Fetched out-of-universe price for open position %s: ₹%.2f", sym, p)
+
     # Auto-close any SL/TP hits first
     closed = trader.check_positions(prices)
     for trade in closed:
