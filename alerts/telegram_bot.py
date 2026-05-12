@@ -8,11 +8,13 @@ from datetime import datetime
 from typing import Optional
 
 import httpx
+import pytz
 
 from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 
 logger = logging.getLogger(__name__)
 
+_IST = pytz.timezone("Asia/Kolkata")
 TELEGRAM_API = "https://api.telegram.org/bot{token}/sendMessage"
 
 
@@ -134,6 +136,50 @@ def alert_startup(universe: list[str], balance: float) -> bool:
     return _send(msg)
 
 
+def alert_market_open(universe: list[str], balance: float, open_positions: int) -> bool:
+    shown   = universe[:10]
+    extra   = len(universe) - 10
+    stocks  = ", ".join(shown) + (f" +{extra} more" if extra > 0 else "")
+    carried = f"{open_positions} position(s) carried over" if open_positions else "No carried positions"
+    msg = (
+        f"🔔 <b>Market Open — Agent Active</b>\n"
+        f"Watching:  {len(universe)} stocks\n"
+        f"Balance:   ₹{balance:,.0f}\n"
+        f"Carried:   {carried}\n"
+        f"Schedule:  Scanning every 15 min until 15:30 IST\n"
+        f"Stocks:    <i>{stocks}</i>\n"
+        f"<i>{_now()}</i>"
+    )
+    return _send(msg)
+
+
+def alert_market_close(snapshot: dict) -> bool:
+    pnl      = snapshot["daily_pnl"]
+    total    = snapshot["total_value"]
+    ret      = snapshot["return_pct"]
+    trades   = snapshot["total_trades"]
+    open_pos = snapshot["open_positions"]
+
+    pnl_emoji    = "📈" if pnl >= 0 else "📉"
+    block        = "🟩" if pnl >= 0 else "🟥"
+    blocks_count = min(int(abs(pnl) / 100), 5)
+    blocks       = block * blocks_count if blocks_count else ""
+
+    carried = (
+        f"{open_pos} position(s) carried to tomorrow" if open_pos else "No open positions"
+    )
+    msg = (
+        f"{pnl_emoji} <b>Market Closed — Agent Signing Off</b>\n"
+        f"Daily P&L:  ₹{pnl:+.2f}  {blocks}\n"
+        f"Portfolio:  ₹{total:,.0f}\n"
+        f"Return:     {ret:+.2f}%\n"
+        f"Trades:     {trades}\n"
+        f"Positions:  {carried}\n"
+        f"Next scan:  tomorrow 07:45 UAE / 09:15 IST\n"
+        f"<i>{_now()}</i>"
+    )
+    return _send(msg)
+
+
 def _now() -> str:
-    import pytz
-    return datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S IST")
+    return datetime.now(_IST).strftime("%Y-%m-%d %H:%M:%S IST")

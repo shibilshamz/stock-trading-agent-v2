@@ -15,6 +15,8 @@ import pytz
 from alerts.telegram_bot import (
     alert_daily_summary,
     alert_error,
+    alert_market_close,
+    alert_market_open,
     alert_risk_halt,
     alert_signal,
     alert_startup,
@@ -217,7 +219,8 @@ def run_once():
     morning_end_t  = parse_ist_time("09:30")
     if morning_open_t <= now_time <= morning_end_t:
         trader.reset_daily_pnl()
-        alert_startup(universe, trader.cash)
+        snap = trader.portfolio_snapshot({})
+        alert_market_open(universe, trader.cash, snap["open_positions"])
 
     with AIEngine() as ai:
         try:
@@ -239,6 +242,7 @@ def run_once():
                 trader.close_all_positions(prices, reason="EOD")
             logger.info("EOD: sending daily summary")
             alert_daily_summary(trader.portfolio_snapshot({}))
+            alert_market_close(trader.portfolio_snapshot({}))
 
     logger.info("GitHub Actions scan complete — exiting cleanly.")
 
