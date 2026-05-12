@@ -1,5 +1,5 @@
 {
-  "cash": 22891.69975585938,
+  "cash": 32206.69975585938,
   "positions": {
     "APOLLOHOSP": {
       "symbol": "APOLLOHOSP",
@@ -14,20 +14,6 @@
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 0.7
-    },
-    "SUNPHARMA": {
-      "symbol": "SUNPHARMA",
-      "action": "BUY",
-      "entry_price": 1874.9,
-      "stop_loss": 1864.23,
-      "take_profit": 1896.24,
-      "quantity": 5,
-      "position_value": 9374.5,
-      "risk_amount": 53.34,
-      "opened_at": "2026-05-11T06:57:50.074711",
-      "confidence": 0.8,
-      "ai_source": "groq",
-      "composite_score": 1.0
     },
     "UPL": {
       "symbol": "UPL",
@@ -134,7 +120,25 @@
       "pnl": -83.2,
       "reason": "STOP_LOSS",
       "closed_at": "2026-05-12T06:29:19.670405"
+    },
+    {
+      "symbol": "SUNPHARMA",
+      "action": "BUY",
+      "entry_price": 1874.9,
+      "stop_loss": 1864.23,
+      "take_profit": 1896.24,
+      "quantity": 5,
+      "position_value": 9374.5,
+      "risk_amount": 53.34,
+      "opened_at": "2026-05-11T06:57:50.074711",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0,
+      "exit_price": 1863.0,
+      "pnl": -59.5,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-05-12T06:38:22.846185"
     }
   ],
-  "daily_pnl": -44.80024414062416
+  "daily_pnl": -104.30024414062461
 }
