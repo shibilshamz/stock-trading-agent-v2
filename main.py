@@ -241,8 +241,9 @@ def run_once():
                         prices[sym] = p
                 trader.close_all_positions(prices, reason="EOD")
             logger.info("EOD: sending daily summary")
-            alert_daily_summary(trader.portfolio_snapshot({}))
-            alert_market_close(trader.portfolio_snapshot({}))
+            snap = trader.portfolio_snapshot({})
+            alert_daily_summary(snap)
+            alert_market_close(snap)
 
     logger.info("GitHub Actions scan complete — exiting cleanly.")
 
