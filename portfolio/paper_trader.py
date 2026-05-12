@@ -9,7 +9,7 @@ import csv
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 import pytz
@@ -75,7 +75,7 @@ class PaperTrader:
             "quantity":        params.quantity,
             "position_value":  params.position_value,
             "risk_amount":     params.risk_amount,
-            "opened_at":       datetime.utcnow().isoformat(),
+            "opened_at":       datetime.now(timezone.utc).isoformat(),
             "confidence":      confidence,
             "ai_source":       ai_source,
             "composite_score": composite_score,
@@ -132,7 +132,7 @@ class PaperTrader:
             "exit_price": round(exit_price, 2),
             "pnl":        round(pnl, 2),
             "reason":     reason,
-            "closed_at":  datetime.utcnow().isoformat(),
+            "closed_at":  datetime.now(timezone.utc).isoformat(),
         }
         self.trade_log.append(trade)
 
@@ -233,6 +233,34 @@ class PaperTrader:
             price = prices.get(sym)
             if price:
                 self.close_position(sym, price, reason=reason)
+
+    def close_stale_positions(
+        self, prices: dict, max_hours: float, reason: str = "STALE"
+    ) -> list[dict]:
+        """Force-close positions held longer than max_hours. Returns closed records."""
+        if max_hours <= 0:
+            return []
+        now    = datetime.now(timezone.utc)
+        closed = []
+        for sym, pos in list(self.positions.items()):
+            try:
+                opened_at = datetime.fromisoformat(pos["opened_at"])
+                if opened_at.tzinfo is None:        # legacy naive-UTC strings
+                    opened_at = opened_at.replace(tzinfo=timezone.utc)
+            except (ValueError, KeyError):
+                continue
+            age_hours = (now - opened_at).total_seconds() / 3600
+            if age_hours >= max_hours:
+                price = prices.get(sym)
+                if price:
+                    logger.warning(
+                        "Stale position %s: age=%.1fh >= %.0fh limit — closing",
+                        sym, age_hours, max_hours,
+                    )
+                    record = self.close_position(sym, price, reason=reason)
+                    if record:
+                        closed.append(record)
+        return closed
 
     # ------------------------------------------------------------------
     # CSV logging

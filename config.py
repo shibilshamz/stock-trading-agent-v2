@@ -19,6 +19,16 @@ MAX_OPEN_POSITIONS = 5          # concurrent trades
 POSITION_SIZE_PCT = 0.20        # 20 % of balance per trade (cash cap)
 MAX_DAILY_LOSS_PCT = 0.03       # halt after -3 % drawdown on the day
 
+# Cooldown — re-entry prevention after stop loss
+COOLDOWN_HOURS = 4              # hours to block re-entry after a SL hit; 0 = disabled
+
+# Market regime — crash detection
+NIFTY_CRASH_PCT = 1.0           # if Nifty is down more than this % today → defensive mode
+NIFTY_CRASH_DAYS = 2            # OR this many consecutive down-days → defensive mode
+
+# Stale position guard
+STALE_POSITION_HOURS = 6        # force-close any position held longer than this; 0 = disabled
+
 # ---------------------------------------------------------------------------
 # Universe
 # ---------------------------------------------------------------------------
