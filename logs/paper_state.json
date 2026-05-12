@@ -1,34 +1,6 @@
 {
-  "cash": 6519.200000000001,
+  "cash": 22891.69975585938,
   "positions": {
-    "ADANIPORTS": {
-      "symbol": "ADANIPORTS",
-      "action": "BUY",
-      "entry_price": 1766.0,
-      "stop_loss": 1752.87,
-      "take_profit": 1792.25,
-      "quantity": 5,
-      "position_value": 8830.0,
-      "risk_amount": 65.63,
-      "opened_at": "2026-05-08T05:48:19.862043",
-      "confidence": 0.8,
-      "ai_source": "groq",
-      "composite_score": 1.0
-    },
-    "ASIANPAINT": {
-      "symbol": "ASIANPAINT",
-      "action": "BUY",
-      "entry_price": 2591.7,
-      "stop_loss": 2570.3,
-      "take_profit": 2634.51,
-      "quantity": 3,
-      "position_value": 7775.1,
-      "risk_amount": 64.21,
-      "opened_at": "2026-05-08T05:48:23.880143",
-      "confidence": 0.8,
-      "ai_source": "groq",
-      "composite_score": 0.7
-    },
     "APOLLOHOSP": {
       "symbol": "APOLLOHOSP",
       "action": "BUY",
@@ -43,20 +15,6 @@
       "ai_source": "groq",
       "composite_score": 0.7
     },
-    "KOTAKBANK": {
-      "symbol": "KOTAKBANK",
-      "action": "BUY",
-      "entry_price": 381.95,
-      "stop_loss": 379.81,
-      "take_profit": 386.23,
-      "quantity": 26,
-      "position_value": 9930.7,
-      "risk_amount": 55.67,
-      "opened_at": "2026-05-11T06:57:15.604726",
-      "confidence": 0.8,
-      "ai_source": "groq",
-      "composite_score": 1.0
-    },
     "SUNPHARMA": {
       "symbol": "SUNPHARMA",
       "action": "BUY",
@@ -70,6 +28,20 @@
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 1.0
+    },
+    "UPL": {
+      "symbol": "UPL",
+      "action": "BUY",
+      "entry_price": 643.6,
+      "stop_loss": 636.23,
+      "take_profit": 658.34,
+      "quantity": 15,
+      "position_value": 9654.0,
+      "risk_amount": 110.58,
+      "opened_at": "2026-05-12T06:29:35.080284",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": -0.6
     }
   },
   "trade_log": [
@@ -108,7 +80,61 @@
       "pnl": 604.0,
       "reason": "TAKE_PROFIT",
       "closed_at": "2026-05-11T06:56:35.218862"
+    },
+    {
+      "symbol": "ADANIPORTS",
+      "action": "BUY",
+      "entry_price": 1766.0,
+      "stop_loss": 1752.87,
+      "take_profit": 1792.25,
+      "quantity": 5,
+      "position_value": 8830.0,
+      "risk_amount": 65.63,
+      "opened_at": "2026-05-08T05:48:19.862043",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0,
+      "exit_price": 1721.7,
+      "pnl": -221.5,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-05-12T06:29:19.669274"
+    },
+    {
+      "symbol": "ASIANPAINT",
+      "action": "BUY",
+      "entry_price": 2591.7,
+      "stop_loss": 2570.3,
+      "take_profit": 2634.51,
+      "quantity": 3,
+      "position_value": 7775.1,
+      "risk_amount": 64.21,
+      "opened_at": "2026-05-08T05:48:23.880143",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 0.7,
+      "exit_price": 2523.5,
+      "pnl": -204.6,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-05-12T06:29:19.669942"
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "action": "BUY",
+      "entry_price": 381.95,
+      "stop_loss": 379.81,
+      "take_profit": 386.23,
+      "quantity": 26,
+      "position_value": 9930.7,
+      "risk_amount": 55.67,
+      "opened_at": "2026-05-11T06:57:15.604726",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0,
+      "exit_price": 378.75,
+      "pnl": -83.2,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-05-12T06:29:19.670405"
     }
   ],
-  "daily_pnl": 464.5
+  "daily_pnl": -44.80024414062416
 }
