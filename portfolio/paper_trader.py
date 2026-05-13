@@ -158,20 +158,32 @@ class PaperTrader:
         self._save_state()
         return trade
 
-    def check_positions(self, prices: dict[str, float]) -> list[dict]:
+    def check_positions(
+        self, prices: dict[str, float], candles: dict = None
+    ) -> list[dict]:
         """
         Iterate open positions and auto-close any that hit SL or TP.
-        `prices` is a dict {symbol: current_price}.
-        Returns list of closed trade records.
+        When `candles` (symbol → DataFrame) is supplied, uses the candle's
+        Low/High so intraday breaches are caught, not just closes.
+        Exits at the SL/TP level price for accurate P&L, not the candle close.
         """
         closed = []
         for sym, pos in list(self.positions.items()):
             price = prices.get(sym)
             if price is None:
                 continue
-            trigger = check_stop_or_target(pos, price)
+
+            if candles and sym in candles and candles[sym] is not None and not candles[sym].empty:
+                df   = candles[sym]
+                low  = float(df["Low"].iloc[-1])
+                high = float(df["High"].iloc[-1])
+            else:
+                low = high = price
+
+            trigger = check_stop_or_target(pos, low, high)
             if trigger:
-                record = self.close_position(sym, price, reason=trigger)
+                exit_price = pos["stop_loss"] if trigger == "STOP_LOSS" else pos["take_profit"]
+                record = self.close_position(sym, exit_price, reason=trigger)
                 if record:
                     closed.append(record)
         return closed

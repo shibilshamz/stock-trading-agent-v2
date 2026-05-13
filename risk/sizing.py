@@ -125,25 +125,29 @@ def calculate_position(
 
 def check_stop_or_target(
     position: dict,
-    current_price: float,
+    low_price: float,
+    high_price: float,
 ) -> Optional[str]:
     """
     Returns "STOP_LOSS", "TAKE_PROFIT", or None.
-    `position` must have keys: action, stop_loss, take_profit.
+    Uses candle low/high so intraday breaches are caught:
+      BUY:  SL when low_price <= stop_loss; TP when high_price >= take_profit
+      SELL: SL when high_price >= stop_loss; TP when low_price <= take_profit
+    Pass the same value for both args when only a single price is available.
     """
     action      = position["action"]
     stop_loss   = position["stop_loss"]
     take_profit = position["take_profit"]
 
     if action == "BUY":
-        if current_price <= stop_loss:
+        if low_price <= stop_loss:
             return "STOP_LOSS"
-        if current_price >= take_profit:
+        if high_price >= take_profit:
             return "TAKE_PROFIT"
     else:  # SELL / short
-        if current_price >= stop_loss:
+        if high_price >= stop_loss:
             return "STOP_LOSS"
-        if current_price <= take_profit:
+        if low_price <= take_profit:
             return "TAKE_PROFIT"
 
     return None

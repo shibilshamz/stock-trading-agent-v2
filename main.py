@@ -100,8 +100,8 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
                 prices[sym] = p
                 logger.debug("Fetched out-of-universe price for open position %s: ₹%.2f", sym, p)
 
-    # Auto-close any SL/TP hits first
-    closed = trader.check_positions(prices)
+    # Auto-close any SL/TP hits first — pass candles so Low/High are used
+    closed = trader.check_positions(prices, candles)
     for trade in closed:
         alert_trade_closed(
             symbol=trade["symbol"],
