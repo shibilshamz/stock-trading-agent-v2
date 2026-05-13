@@ -117,7 +117,7 @@ TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "")
 # ---------------------------------------------------------------------------
 SCAN_INTERVAL_SECONDS  = 900    # 15-min candle → scan every 15 min
 MORNING_SCAN_TIME      = "09:20"  # IST, after market opens
-EOD_SUMMARY_TIME       = "15:35"  # IST, after market closes
+EOD_SUMMARY_TIME       = "15:30"  # IST — matches 10:00 UTC final cron trigger
 
 # ---------------------------------------------------------------------------
 # Logging

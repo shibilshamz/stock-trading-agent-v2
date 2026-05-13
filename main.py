@@ -194,6 +194,7 @@ def run_once():
     now        = ist_now()
     now_time   = now.time()
     market_day = now.weekday() < 5
+    eod_t      = parse_ist_time(EOD_SUMMARY_TIME)
 
     logger.info("GitHub Actions mode — single scan cycle (%s IST)", now.strftime("%H:%M"))
 
@@ -201,7 +202,8 @@ def run_once():
         logger.info("Weekend — no trading. Exiting.")
         return
 
-    if not is_market_open():
+    # Let EOD runs through even after market close — only block truly off-hours calls
+    if not is_market_open() and now_time < eod_t:
         logger.info("Market closed at %s IST — no action. Exiting.", now.strftime("%H:%M"))
         return
 
@@ -214,9 +216,9 @@ def run_once():
         alert_error("universe_scan", str(exc))
         return
 
-    # Morning reset: first 15-minute window after market open (09:15–09:30 IST)
+    # Morning reset: widen window to 10:00 so queue delays up to 45 min are tolerated
     morning_open_t = parse_ist_time(MARKET_OPEN_TIME)
-    morning_end_t  = parse_ist_time("09:30")
+    morning_end_t  = parse_ist_time("10:00")
     if morning_open_t <= now_time <= morning_end_t:
         trader.reset_daily_pnl()
         snap = trader.portfolio_snapshot({})
@@ -230,7 +232,6 @@ def run_once():
             alert_error("run_scan", str(exc))
 
         # EOD: close all open positions and always send daily summary
-        eod_t = parse_ist_time(EOD_SUMMARY_TIME)
         if now_time >= eod_t:
             if trader.positions:
                 logger.info("EOD: force-closing all positions")
