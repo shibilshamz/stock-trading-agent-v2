@@ -1,5 +1,5 @@
 {
-  "cash": 5795.29938964844,
+  "cash": 6049.049389648444,
   "positions": {
     "APOLLOHOSP": {
       "symbol": "APOLLOHOSP",
@@ -14,20 +14,6 @@
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 0.7
-    },
-    "UPL": {
-      "symbol": "UPL",
-      "action": "BUY",
-      "entry_price": 626.85,
-      "stop_loss": 621.65,
-      "take_profit": 637.25,
-      "quantity": 15,
-      "position_value": 9402.75,
-      "risk_amount": 78.03,
-      "opened_at": "2026-05-12T09:23:06.371758",
-      "confidence": 0.8,
-      "ai_source": "groq",
-      "composite_score": -0.7
     },
     "ASIANPAINT": {
       "symbol": "ASIANPAINT",
@@ -57,19 +43,33 @@
       "ai_source": "groq",
       "composite_score": 1.0
     },
-    "HINDALCO": {
-      "symbol": "HINDALCO",
+    "BHARTIARTL": {
+      "symbol": "BHARTIARTL",
       "action": "BUY",
-      "entry_price": 1076.5,
-      "stop_loss": 1069.15,
-      "take_profit": 1091.2,
-      "quantity": 9,
-      "position_value": 9688.5,
-      "risk_amount": 66.17,
-      "opened_at": "2026-05-13T06:40:44.362175+00:00",
+      "entry_price": 1845.7,
+      "stop_loss": 1831.38,
+      "take_profit": 1874.34,
+      "quantity": 5,
+      "position_value": 9228.5,
+      "risk_amount": 71.61,
+      "opened_at": "2026-05-14T06:39:05.720757+00:00",
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 0.7
+    },
+    "HINDALCO": {
+      "symbol": "HINDALCO",
+      "action": "BUY",
+      "entry_price": 1099.7,
+      "stop_loss": 1092.79,
+      "take_profit": 1113.53,
+      "quantity": 9,
+      "position_value": 9897.3,
+      "risk_amount": 62.22,
+      "opened_at": "2026-05-14T06:39:35.662158+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0
     }
   },
   "trade_log": [
@@ -198,7 +198,43 @@
       "pnl": -251.25,
       "reason": "STOP_LOSS",
       "closed_at": "2026-05-12T09:22:41.218306"
+    },
+    {
+      "symbol": "UPL",
+      "action": "BUY",
+      "entry_price": 626.85,
+      "stop_loss": 621.65,
+      "take_profit": 637.25,
+      "quantity": 15,
+      "position_value": 9402.75,
+      "risk_amount": 78.03,
+      "opened_at": "2026-05-12T09:23:06.371758",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": -0.7,
+      "exit_price": 637.25,
+      "pnl": 156.0,
+      "reason": "TAKE_PROFIT",
+      "closed_at": "2026-05-14T06:38:51.802354+00:00"
+    },
+    {
+      "symbol": "HINDALCO",
+      "action": "BUY",
+      "entry_price": 1076.5,
+      "stop_loss": 1069.15,
+      "take_profit": 1091.2,
+      "quantity": 9,
+      "position_value": 9688.5,
+      "risk_amount": 66.17,
+      "opened_at": "2026-05-13T06:40:44.362175+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 0.7,
+      "exit_price": 1091.2,
+      "pnl": 132.3,
+      "reason": "TAKE_PROFIT",
+      "closed_at": "2026-05-14T06:38:51.803499+00:00"
     }
   ],
-  "daily_pnl": -355.55061035156245
+  "daily_pnl": -67.25061035156239
 }
