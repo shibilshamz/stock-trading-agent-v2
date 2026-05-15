@@ -6,7 +6,7 @@
   <title>NSE Trading Agent — Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx-style@0.8.13/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root {
       --bg:       #0f1117;
@@ -382,7 +382,7 @@
   setInterval(load, 60_000);   // auto-refresh every 60 s
 
   // ---------------------------------------------------------------------------
-  // Excel report (SheetJS / xlsx-style)
+  // Excel report (SheetJS CE 0.18)
   // ---------------------------------------------------------------------------
   function downloadExcel() {
     const rows = window._rows;
@@ -400,12 +400,7 @@
       const wb = XLSX.utils.book_new();
 
       // ── Cell helpers ────────────────────────────────────────────────
-      const HDR_STYLE = {
-        font: { bold: true, color: { rgb: 'FFFFFF' } },
-        fill: { patternType: 'solid', fgColor: { rgb: '1E293B' } },
-        alignment: { horizontal: 'center' },
-      };
-      const hdr = v => ({ v, t: 's', s: HDR_STYLE });
+      const hdr = v => ({ v, t: 's' });
       const str = v => ({ v: v == null ? '' : String(v), t: 's' });
       const num = v => ({ v: +v || 0, t: 'n' });
       const cur = v => ({ v: +v || 0, t: 'n', z: '"₹"#,##0.00' });
