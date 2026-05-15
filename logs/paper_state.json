@@ -1,20 +1,6 @@
 {
-  "cash": 13188.449023437499,
+  "cash": 31854.1490234375,
   "positions": {
-    "ADANIPORTS": {
-      "symbol": "ADANIPORTS",
-      "action": "BUY",
-      "entry_price": 1812.4,
-      "stop_loss": 1795.89,
-      "take_profit": 1845.42,
-      "quantity": 5,
-      "position_value": 9062.0,
-      "risk_amount": 82.56,
-      "opened_at": "2026-05-15T06:48:27.737603+00:00",
-      "confidence": 0.8,
-      "ai_source": "groq",
-      "composite_score": 0.6
-    },
     "TITAN": {
       "symbol": "TITAN",
       "action": "BUY",
@@ -28,20 +14,6 @@
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 0.6
-    },
-    "KOTAKBANK": {
-      "symbol": "KOTAKBANK",
-      "action": "BUY",
-      "entry_price": 390.1,
-      "stop_loss": 387.45,
-      "take_profit": 395.4,
-      "quantity": 25,
-      "position_value": 9752.5,
-      "risk_amount": 66.23,
-      "opened_at": "2026-05-15T06:50:15.718228+00:00",
-      "confidence": 0.8,
-      "ai_source": "groq",
-      "composite_score": 1.0
     },
     "POWERGRID": {
       "symbol": "POWERGRID",
@@ -418,7 +390,43 @@
       "pnl": 0.0,
       "reason": "EOD",
       "closed_at": "2026-05-14T12:01:04.670311+00:00"
+    },
+    {
+      "symbol": "ADANIPORTS",
+      "action": "BUY",
+      "entry_price": 1812.4,
+      "stop_loss": 1795.89,
+      "take_profit": 1845.42,
+      "quantity": 5,
+      "position_value": 9062.0,
+      "risk_amount": 82.56,
+      "opened_at": "2026-05-15T06:48:27.737603+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 0.6,
+      "exit_price": 1795.89,
+      "pnl": -82.55,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-05-15T09:50:28.921476+00:00"
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "action": "BUY",
+      "entry_price": 390.1,
+      "stop_loss": 387.45,
+      "take_profit": 395.4,
+      "quantity": 25,
+      "position_value": 9752.5,
+      "risk_amount": 66.23,
+      "opened_at": "2026-05-15T06:50:15.718228+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0,
+      "exit_price": 387.45,
+      "pnl": -66.25,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-05-15T09:50:28.922709+00:00"
     }
   ],
-  "daily_pnl": 112.74902343749875
+  "daily_pnl": -36.05097656250206
 }
