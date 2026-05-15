@@ -59,9 +59,10 @@ Current portfolio state:
   Daily P&L:        ₹{daily_pnl:.2f}
 
 Rules:
-- Only BUY if composite_score >= {threshold} and news is not negative
-- Only SELL if composite_score <= -{threshold}
-- Prefer HOLD when signals are mixed or news is strongly negative
+- BUY  when composite_score >= +{threshold} and news is not strongly negative
+- SELL when composite_score <= -{threshold}; this is a short-sell signal — output SELL, do not convert to HOLD
+- HOLD when signals are mixed or threshold not reached in either direction
+- Do NOT bias toward BUY — SELL and HOLD are equally valid outcomes
 - Max confidence 0.9; always state the main risk
 
 Respond with JSON only.

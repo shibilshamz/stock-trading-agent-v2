@@ -137,8 +137,8 @@ def vwap_signal(df: pd.DataFrame) -> int:
 def momentum_signal(df: pd.DataFrame) -> int:
     """
     EMA crossover combined with RSI confirmation.
-    +1 → fast EMA > slow EMA AND RSI not overbought
-    -1 → fast EMA < slow EMA AND RSI not oversold
+    +1 → fast EMA > slow EMA and RSI not overbought
+    -1 → RSI overbought (>70, mean-reversion bearish) OR fast EMA < slow EMA and RSI not oversold
      0 → mixed or neutral
     """
     close     = df["Close"]
@@ -153,7 +153,12 @@ def momentum_signal(df: pd.DataFrame) -> int:
     if pd.isna(last_fast) or pd.isna(last_slow) or pd.isna(last_rsi):
         return 0
 
-    bullish = last_fast > last_slow and last_rsi < MOMENTUM_RSI_OVERBOUGHT
+    # Overbought RSI is a mean-reversion bearish signal regardless of EMA direction.
+    # Previously this returned 0, which prevented composite score from reaching -0.55.
+    if last_rsi > MOMENTUM_RSI_OVERBOUGHT:
+        return -1
+
+    bullish = last_fast > last_slow
     bearish = last_fast < last_slow and last_rsi > MOMENTUM_RSI_OVERSOLD
 
     if bullish:
