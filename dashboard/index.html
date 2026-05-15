@@ -6,6 +6,7 @@
   <title>NSE Trading Agent — Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-style@0.8.13/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --bg:       #0f1117;
@@ -52,6 +53,18 @@
       cursor: pointer;
       font-size: .8rem;
     }
+    .dl-btn {
+      background: #16a34a;
+      border: none;
+      color: #fff;
+      padding: .4rem .9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: .8rem;
+      font-weight: 600;
+    }
+    .dl-btn:hover { background: #15803d; }
+    .dl-btn:disabled { background: #4b5563; cursor: not-allowed; }
     main { padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
 
     /* Stats cards */
@@ -116,7 +129,10 @@
     <h1>NSE Trading Agent</h1>
     <small id="updated">Loading…</small>
   </div>
-  <button class="theme-btn" onclick="toggleTheme()">Toggle Theme</button>
+  <div style="display:flex;gap:.5rem;align-items:center;">
+    <button class="dl-btn" id="xl-btn" onclick="downloadExcel()">&#11015; Download Excel</button>
+    <button class="theme-btn" onclick="toggleTheme()">Toggle Theme</button>
+  </div>
 </header>
 
 <main>
@@ -364,6 +380,115 @@
 
   load();
   setInterval(load, 60_000);   // auto-refresh every 60 s
+
+  // ---------------------------------------------------------------------------
+  // Excel report (SheetJS / xlsx-style)
+  // ---------------------------------------------------------------------------
+  function downloadExcel() {
+    const rows = window._rows;
+    if (!rows || !rows.length) {
+      alert('No trade data loaded yet — please wait for the dashboard to finish loading.');
+      return;
+    }
+
+    const btn = document.getElementById('xl-btn');
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+
+    try {
+      const STARTING = 50000;
+      const wb = XLSX.utils.book_new();
+
+      // ── Cell helpers ────────────────────────────────────────────────
+      const HDR_STYLE = {
+        font: { bold: true, color: { rgb: 'FFFFFF' } },
+        fill: { patternType: 'solid', fgColor: { rgb: '1E293B' } },
+        alignment: { horizontal: 'center' },
+      };
+      const hdr = v => ({ v, t: 's', s: HDR_STYLE });
+      const str = v => ({ v: v == null ? '' : String(v), t: 's' });
+      const num = v => ({ v: +v || 0, t: 'n' });
+      const cur = v => ({ v: +v || 0, t: 'n', z: '"₹"#,##0.00' });
+      const pct = v => ({ v: +v || 0, t: 'n', z: '0.00%' });
+
+      // ── Computed stats ───────────────────────────────────────────────
+      const closed   = rows.filter(r => r.status === 'CLOSED');
+      const open     = rows.filter(r => r.status === 'OPEN');
+      const realPnl  = closed.reduce((s, r) => s + (+r.pnl || 0), 0);
+      const wins     = closed.filter(r => +r.pnl > 0).length;
+      const byPnl    = [...closed].sort((a, b) => +b.pnl - +a.pnl);
+      const best     = byPnl[0];
+      const worst    = byPnl[byPnl.length - 1];
+      const buys     = rows.filter(r => r.action === 'BUY').length;
+      const sells    = rows.filter(r => r.action === 'SELL').length;
+      const genTime  = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
+
+      // ── Sheet 1: Summary ─────────────────────────────────────────────
+      const summaryAoa = [
+        [hdr('Metric'), hdr('Value')],
+        [str('Starting Balance'),       cur(STARTING)],
+        [str('Current Balance'),        cur(STARTING + realPnl)],
+        [str('Total Return'),           pct(realPnl / STARTING)],
+        [str('Realised P&L'),           cur(realPnl)],
+        [str('Win Rate'),               pct(closed.length ? wins / closed.length : 0)],
+        [str('Total Trades (closed)'),  num(closed.length)],
+        [str('Open Positions'),         num(open.length)],
+        [str('Total BUY Signals'),      num(buys)],
+        [str('Total SELL Signals'),     num(sells)],
+        [str('Best Trade'),             str(best  ? `${best.symbol}  ₹${(+best.pnl).toFixed(2)}`  : '—')],
+        [str('Worst Trade'),            str(worst ? `${worst.symbol}  ₹${(+worst.pnl).toFixed(2)}` : '—')],
+        [str('Report Generated'),       str(genTime)],
+      ];
+      const ws1 = XLSX.utils.aoa_to_sheet(summaryAoa);
+      ws1['!cols'] = [{ wch: 26 }, { wch: 34 }];
+      XLSX.utils.book_append_sheet(wb, ws1, 'Summary');
+
+      // ── Trade sheet builder ──────────────────────────────────────────
+      const TRADE_COLS   = ['Time (IST)', 'Symbol', 'Action', 'Status', 'Entry (₹)', 'Stop (₹)', 'Target (₹)', 'Qty', 'Confidence', 'AI Source', 'Score', 'P&L (₹)'];
+      const TRADE_WIDTHS = [22, 14, 8, 8, 12, 12, 12, 6, 12, 12, 8, 12];
+
+      function tradeSheet(data) {
+        const aoa = [TRADE_COLS.map(hdr)];
+        for (const r of data) {
+          aoa.push([
+            str(r.timestamp_ist),
+            str(r.symbol),
+            str(r.action),
+            str(r.status),
+            cur(r.entry_price),
+            cur(r.stop_loss),
+            cur(r.target),
+            num(r.quantity),
+            pct(+r.confidence || 0),
+            str(r.ai_source),
+            { v: +r.composite_score || 0, t: 'n', z: '0.000' },
+            r.status === 'OPEN' ? str('—') : cur(r.pnl),
+          ]);
+        }
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        ws['!cols'] = TRADE_WIDTHS.map(wch => ({ wch }));
+        return ws;
+      }
+
+      // ── Sheet 2: All Trades (newest first) ──────────────────────────
+      const allSorted = [...rows].sort((a, b) => new Date(b.timestamp_ist) - new Date(a.timestamp_ist));
+      XLSX.utils.book_append_sheet(wb, tradeSheet(allSorted), 'All Trades');
+
+      // ── Sheet 3: Open Positions ──────────────────────────────────────
+      XLSX.utils.book_append_sheet(wb, tradeSheet(open), 'Open Positions');
+
+      // ── Sheet 4: Closed Trades (best P&L first) ──────────────────────
+      const closedSorted = [...closed].sort((a, b) => +b.pnl - +a.pnl);
+      XLSX.utils.book_append_sheet(wb, tradeSheet(closedSorted), 'Closed Trades');
+
+      // ── Write file ───────────────────────────────────────────────────
+      const today = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `NSE_Trading_Report_${today}.xlsx`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '&#11015; Download Excel';
+    }
+  }
 </script>
 </body>
 </html>
