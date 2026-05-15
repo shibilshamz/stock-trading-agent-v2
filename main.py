@@ -143,6 +143,9 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
             )
 
             if action in ("BUY", "SELL") and sym not in trader.positions:
+                if ist_now().time() >= parse_ist_time("15:15"):
+                    logger.debug("Entry cutoff — skipping new %s %s after 15:15 IST", action, sym)
+                    continue
                 entry = prices.get(sym, tech["last_close"])
                 params = calculate_position(
                     symbol=sym,
@@ -207,6 +210,13 @@ def run_once():
         logger.info("Market closed at %s IST — no action. Exiting.", now.strftime("%H:%M"))
         return
 
+    # Hard cutoff: GitHub Actions free-tier jobs can be delayed 2+ hours.
+    # Any job arriving after 16:00 IST is stale — skip entirely to prevent
+    # opening positions after market close.
+    if now_time >= parse_ist_time("16:00"):
+        logger.info("Past 16:00 IST hard cutoff (queue-delay guard) — exiting.")
+        return
+
     trader = PaperTrader(PAPER_BALANCE)
 
     try:
@@ -238,8 +248,7 @@ def run_once():
                 prices = {}
                 for sym in list(trader.positions.keys()):
                     p = latest_price(sym)
-                    if p:
-                        prices[sym] = p
+                    prices[sym] = p if p else trader.positions[sym]["entry_price"]
                 trader.close_all_positions(prices, reason="EOD")
             logger.info("EOD: sending daily summary")
             snap = trader.portfolio_snapshot({})
@@ -314,8 +323,7 @@ def main():
                 prices = {}
                 for sym in list(trader.positions.keys()):
                     p = latest_price(sym)
-                    if p:
-                        prices[sym] = p
+                    prices[sym] = p if p else trader.positions[sym]["entry_price"]
                 trader.close_all_positions(prices, reason="EOD")
             logger.info("EOD: sending daily summary")
             snap = trader.portfolio_snapshot({})
