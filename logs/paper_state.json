@@ -1,35 +1,6 @@
 {
-  "cash": 31854.1490234375,
-  "positions": {
-    "TITAN": {
-      "symbol": "TITAN",
-      "action": "BUY",
-      "entry_price": 4175.7,
-      "stop_loss": 4153.51,
-      "take_profit": 4220.09,
-      "quantity": 2,
-      "position_value": 8351.4,
-      "risk_amount": 44.39,
-      "opened_at": "2026-05-15T06:50:09.759853+00:00",
-      "confidence": 0.8,
-      "ai_source": "groq",
-      "composite_score": 0.6
-    },
-    "POWERGRID": {
-      "symbol": "POWERGRID",
-      "action": "BUY",
-      "entry_price": 304.95,
-      "stop_loss": 303.37,
-      "take_profit": 308.11,
-      "quantity": 32,
-      "position_value": 9758.4,
-      "risk_amount": 50.63,
-      "opened_at": "2026-05-15T06:57:53.223736+00:00",
-      "confidence": 0.8,
-      "ai_source": "groq",
-      "composite_score": 0.0
-    }
-  },
+  "cash": 49968.34907226563,
+  "positions": {},
   "trade_log": [
     {
       "symbol": "BRITANNIA",
@@ -426,7 +397,61 @@
       "pnl": -66.25,
       "reason": "STOP_LOSS",
       "closed_at": "2026-05-15T09:50:28.922709+00:00"
+    },
+    {
+      "symbol": "TITAN",
+      "action": "BUY",
+      "entry_price": 4175.7,
+      "stop_loss": 4153.51,
+      "take_profit": 4220.09,
+      "quantity": 2,
+      "position_value": 8351.4,
+      "risk_amount": 44.39,
+      "opened_at": "2026-05-15T06:50:09.759853+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 0.6,
+      "exit_price": 4169.1,
+      "pnl": -13.2,
+      "reason": "EOD",
+      "closed_at": "2026-05-15T12:03:14.407148+00:00"
+    },
+    {
+      "symbol": "POWERGRID",
+      "action": "BUY",
+      "entry_price": 304.95,
+      "stop_loss": 303.37,
+      "take_profit": 308.11,
+      "quantity": 32,
+      "position_value": 9758.4,
+      "risk_amount": 50.63,
+      "opened_at": "2026-05-15T06:57:53.223736+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 0.0,
+      "exit_price": 305.5,
+      "pnl": 17.6,
+      "reason": "EOD",
+      "closed_at": "2026-05-15T12:03:14.408629+00:00"
+    },
+    {
+      "symbol": "NESTLEIND",
+      "action": "BUY",
+      "entry_price": 1434.1,
+      "stop_loss": 1426.15,
+      "take_profit": 1450.01,
+      "quantity": 6,
+      "position_value": 8604.6,
+      "risk_amount": 47.72,
+      "opened_at": "2026-05-15T12:02:38.850109+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": -0.7,
+      "exit_price": 1434.1,
+      "pnl": -0.0,
+      "reason": "EOD",
+      "closed_at": "2026-05-15T12:03:14.409464+00:00"
     }
   ],
-  "daily_pnl": -36.05097656250206
+  "daily_pnl": -31.650927734375784
 }
