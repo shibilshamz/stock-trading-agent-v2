@@ -1,5 +1,5 @@
 {
-  "cash": 22946.8490234375,
+  "cash": 13188.449023437499,
   "positions": {
     "ADANIPORTS": {
       "symbol": "ADANIPORTS",
@@ -42,6 +42,20 @@
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 1.0
+    },
+    "POWERGRID": {
+      "symbol": "POWERGRID",
+      "action": "BUY",
+      "entry_price": 304.95,
+      "stop_loss": 303.37,
+      "take_profit": 308.11,
+      "quantity": 32,
+      "position_value": 9758.4,
+      "risk_amount": 50.63,
+      "opened_at": "2026-05-15T06:57:53.223736+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 0.0
     }
   },
   "trade_log": [
