@@ -1,20 +1,6 @@
 {
-  "cash": 32374.199072265626,
+  "cash": 27604.549072265625,
   "positions": {
-    "KOTAKBANK": {
-      "symbol": "KOTAKBANK",
-      "action": "BUY",
-      "entry_price": 390.35,
-      "stop_loss": 387.49,
-      "take_profit": 396.08,
-      "quantity": 25,
-      "position_value": 9758.75,
-      "risk_amount": 71.57,
-      "opened_at": "2026-05-18T07:49:13.478909+00:00",
-      "confidence": 0.8,
-      "ai_source": "groq",
-      "composite_score": 1.0
-    },
     "ASIANPAINT": {
       "symbol": "ASIANPAINT",
       "action": "BUY",
@@ -28,6 +14,34 @@
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 1.0
+    },
+    "HEROMOTOCO": {
+      "symbol": "HEROMOTOCO",
+      "action": "BUY",
+      "entry_price": 5024.0,
+      "stop_loss": 4991.62,
+      "take_profit": 5088.76,
+      "quantity": 1,
+      "position_value": 5024.0,
+      "risk_amount": 32.38,
+      "opened_at": "2026-05-19T07:03:32.592298+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0
+    },
+    "HINDALCO": {
+      "symbol": "HINDALCO",
+      "action": "BUY",
+      "entry_price": 1048.1,
+      "stop_loss": 1042.81,
+      "take_profit": 1058.68,
+      "quantity": 9,
+      "position_value": 9432.9,
+      "risk_amount": 47.59,
+      "opened_at": "2026-05-19T07:04:38.845312+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 0.0
     }
   },
   "trade_log": [
@@ -480,7 +494,25 @@
       "pnl": -0.0,
       "reason": "EOD",
       "closed_at": "2026-05-15T12:03:14.409464+00:00"
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "action": "BUY",
+      "entry_price": 390.35,
+      "stop_loss": 387.49,
+      "take_profit": 396.08,
+      "quantity": 25,
+      "position_value": 9758.75,
+      "risk_amount": 71.57,
+      "opened_at": "2026-05-18T07:49:13.478909+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0,
+      "exit_price": 387.49,
+      "pnl": -71.5,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-05-19T07:02:54.993838+00:00"
     }
   ],
-  "daily_pnl": -31.650927734375784
+  "daily_pnl": -103.15092773437613
 }
