@@ -30,6 +30,7 @@ from config import (
     LOG_LEVEL,
     MARKET_CLOSE_TIME,
     MARKET_OPEN_TIME,
+    MAX_OPEN_POSITIONS,
     MORNING_SCAN_TIME,
     PAPER_BALANCE,
     SCAN_INTERVAL_SECONDS,
@@ -126,8 +127,8 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
             sentiment = sentiments.get(sym, {"score": 0, "label": "neutral", "articles": []})
 
             portfolio_state = {
-                "open_positions": snapshot["open_positions"],
-                "cash":           snapshot["cash"],
+                "open_positions": len(trader.positions),
+                "cash":           trader.cash,
                 "daily_pnl":      snapshot["daily_pnl"],
             }
 
@@ -143,6 +144,9 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
             )
 
             if action in ("BUY", "SELL") and sym not in trader.positions:
+                if len(trader.positions) >= MAX_OPEN_POSITIONS:
+                    logger.debug("Max positions (%d) reached — skipping %s", MAX_OPEN_POSITIONS, sym)
+                    continue
                 if ist_now().time() >= parse_ist_time("15:15"):
                     logger.debug("Entry cutoff — skipping new %s %s after 15:15 IST", action, sym)
                     continue
@@ -152,10 +156,10 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
                     action=action,
                     entry_price=entry,
                     atr=tech["atr"] or 0,
-                    available_cash=snapshot["cash"],
+                    available_cash=trader.cash,
                     current_balance=PAPER_BALANCE,
                     daily_pnl=snapshot["daily_pnl"],
-                    open_positions=snapshot["open_positions"],
+                    open_positions=len(trader.positions),
                 )
 
                 if params:
@@ -175,8 +179,6 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
                             target=params.take_profit,
                             reason=decision["reason"],
                         )
-                        snapshot["open_positions"] += 1
-                        snapshot["cash"] -= params.position_value
 
         except Exception as exc:
             logger.error("Error processing %s: %s", sym, exc)

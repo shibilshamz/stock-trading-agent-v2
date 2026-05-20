@@ -58,6 +58,14 @@ class PaperTrader:
             logger.warning("Duplicate rejected: already have an open position in %s", params.symbol)
             return False
 
+        if self._has_open_csv_entry(params.symbol):
+            logger.warning(
+                "Duplicate rejected: %s has an unclosed OPEN row in trades.csv "
+                "(in-memory state may be stale from restart)",
+                params.symbol,
+            )
+            return False
+
         if params.position_value > self.cash:
             logger.warning(
                 "Insufficient cash (₹%.0f) for %s (₹%.0f)",
@@ -278,6 +286,25 @@ class PaperTrader:
     # CSV logging
     # ------------------------------------------------------------------
 
+    def _has_open_csv_entry(self, symbol: str) -> bool:
+        """Return True if trades.csv has an OPEN row for symbol with no subsequent CLOSED row."""
+        if not os.path.exists(TRADES_CSV):
+            return False
+        try:
+            has_open = False
+            with open(TRADES_CSV, "r", encoding="utf-8") as f:
+                for row in csv.DictReader(f):
+                    if row.get("symbol") != symbol:
+                        continue
+                    if row.get("status") == "OPEN":
+                        has_open = True
+                    elif row.get("status") == "CLOSED":
+                        has_open = False
+            return has_open
+        except Exception as exc:
+            logger.error("CSV duplicate check failed for %s: %s", symbol, exc)
+            return False
+
     def _append_csv(self, row: dict):
         os.makedirs(LOG_DIR, exist_ok=True)
         write_header = not os.path.exists(TRADES_CSV) or os.path.getsize(TRADES_CSV) == 0
@@ -302,9 +329,11 @@ class PaperTrader:
             "trade_log": self.trade_log,
             "daily_pnl": self.daily_pnl,
         }
+        tmp = STATE_FILE + ".tmp"
         try:
-            with open(STATE_FILE, "w", encoding="utf-8") as f:
+            with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(state, f, indent=2, default=str)
+            os.replace(tmp, STATE_FILE)
         except Exception as exc:
             logger.error("Failed to save state: %s", exc)
 
@@ -338,6 +367,7 @@ class PaperTrader:
             return
         try:
             open_rows: dict = {}
+            open_counts: dict[str, int] = {}
             realised_pnl = 0.0
             with open(TRADES_CSV, "r", encoding="utf-8") as f:
                 for row in csv.DictReader(f):
@@ -345,13 +375,23 @@ class PaperTrader:
                     if not sym:
                         continue
                     if row["status"] == "OPEN":
+                        open_counts[sym] = open_counts.get(sym, 0) + 1
                         open_rows[sym] = row
                     elif row["status"] == "CLOSED":
                         open_rows.pop(sym, None)
+                        open_counts.pop(sym, None)
                         realised_pnl += float(row.get("pnl") or 0)
 
             if not open_rows:
                 return
+
+            for sym, count in open_counts.items():
+                if count > 1:
+                    logger.warning(
+                        "CSV recovery: %d duplicate OPEN rows for %s with no CLOSE — "
+                        "keeping most recent entry",
+                        count, sym,
+                    )
 
             for sym, row in open_rows.items():
                 entry = float(row["entry_price"])
