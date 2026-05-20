@@ -1,6 +1,77 @@
 {
-  "cash": 49968.34907226563,
-  "positions": {},
+  "cash": 4260.389072265623,
+  "positions": {
+    "ASIANPAINT": {
+      "symbol": "ASIANPAINT",
+      "action": "BUY",
+      "entry_price": 2611.8,
+      "stop_loss": 2597.85,
+      "take_profit": 2639.7,
+      "quantity": 3,
+      "position_value": 7835.4,
+      "risk_amount": 41.85,
+      "opened_at": "2026-05-18T07:50:07.314098+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0
+    },
+    "POWERGRID": {
+      "symbol": "POWERGRID",
+      "action": "BUY",
+      "entry_price": 298.5,
+      "stop_loss": 297.2,
+      "take_profit": 301.11,
+      "quantity": 33,
+      "position_value": 9850.5,
+      "risk_amount": 43.02,
+      "opened_at": "2026-05-19T07:48:00.396245+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0
+    },
+    "HEROMOTOCO": {
+      "symbol": "HEROMOTOCO",
+      "action": "BUY",
+      "entry_price": 4995.5,
+      "stop_loss": 4960.3,
+      "take_profit": 5065.9,
+      "quantity": 2,
+      "position_value": 9991.0,
+      "risk_amount": 70.4,
+      "opened_at": "2026-05-20T07:04:28.503900+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0
+    },
+    "APOLLOHOSP": {
+      "symbol": "APOLLOHOSP",
+      "action": "BUY",
+      "entry_price": 8060.5,
+      "stop_loss": 8014.0,
+      "take_profit": 8153.5,
+      "quantity": 1,
+      "position_value": 8060.5,
+      "risk_amount": 46.5,
+      "opened_at": "2026-05-20T07:05:04.916686+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0
+    },
+    "KOTAKBANK": {
+      "symbol": "KOTAKBANK",
+      "action": "BUY",
+      "entry_price": 383.15,
+      "stop_loss": 381.43,
+      "take_profit": 386.6,
+      "quantity": 26,
+      "position_value": 9961.9,
+      "risk_amount": 44.81,
+      "opened_at": "2026-05-20T07:44:34.396341+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0
+    }
+  },
   "trade_log": [
     {
       "symbol": "BRITANNIA",
@@ -451,7 +522,61 @@
       "pnl": -0.0,
       "reason": "EOD",
       "closed_at": "2026-05-15T12:03:14.409464+00:00"
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "action": "BUY",
+      "entry_price": 390.35,
+      "stop_loss": 387.49,
+      "take_profit": 396.08,
+      "quantity": 25,
+      "position_value": 9758.75,
+      "risk_amount": 71.57,
+      "opened_at": "2026-05-18T07:49:13.478909+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0,
+      "exit_price": 387.49,
+      "pnl": -71.5,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-05-19T07:02:54.993838+00:00"
+    },
+    {
+      "symbol": "HEROMOTOCO",
+      "action": "BUY",
+      "entry_price": 5024.0,
+      "stop_loss": 4991.62,
+      "take_profit": 5088.76,
+      "quantity": 1,
+      "position_value": 5024.0,
+      "risk_amount": 32.38,
+      "opened_at": "2026-05-19T07:03:32.592298+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0,
+      "exit_price": 4991.62,
+      "pnl": -32.38,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-05-20T07:03:33.245864+00:00"
+    },
+    {
+      "symbol": "HINDALCO",
+      "action": "BUY",
+      "entry_price": 1048.1,
+      "stop_loss": 1042.81,
+      "take_profit": 1058.68,
+      "quantity": 9,
+      "position_value": 9432.9,
+      "risk_amount": 47.59,
+      "opened_at": "2026-05-19T07:04:38.845312+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 0.0,
+      "exit_price": 1058.68,
+      "pnl": 95.22,
+      "reason": "TAKE_PROFIT",
+      "closed_at": "2026-05-20T07:03:33.247108+00:00"
     }
   ],
-  "daily_pnl": -31.650927734375784
+  "daily_pnl": -40.31092773437484
 }
