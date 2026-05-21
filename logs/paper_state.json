@@ -1,5 +1,5 @@
 {
-  "cash": 22421.299072265625,
+  "cash": 14088.799072265625,
   "positions": {
     "ASIANPAINT": {
       "symbol": "ASIANPAINT",
@@ -39,6 +39,20 @@
       "position_value": 9846.4,
       "risk_amount": 52.1,
       "opened_at": "2026-05-21T07:38:24.830756+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0
+    },
+    "APOLLOHOSP": {
+      "symbol": "APOLLOHOSP",
+      "action": "BUY",
+      "entry_price": 8332.5,
+      "stop_loss": 8269.94,
+      "take_profit": 8457.61,
+      "quantity": 1,
+      "position_value": 8332.5,
+      "risk_amount": 62.56,
+      "opened_at": "2026-05-21T07:55:10.594648+00:00",
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 1.0
