@@ -1,6 +1,7 @@
+# Hermes can edit this file 👑
 """
 Central configuration for stock-trading-agent-v2.
-All tuneable parameters live here; secrets are loaded from .env.
+All tuneable parameters live here; secrets are loaded from.env.
 """
 
 import os
@@ -15,18 +16,24 @@ PAPER_BALANCE = 50_000          # ₹ starting capital
 MAX_OPEN_POSITIONS = 5          # concurrent trades
 # Cash cap upper bound per trade — primary sizing is ATR risk-based (MAX_RISK_PER_TRADE_PCT).
 # This only binds when the ATR method would exceed it, or when stock price is high
-# relative to balance (e.g. ₹3,200 stock on ₹50,000 balance needs ≥20% to get >1 share).
+# relative to balance (e.g. ₹ 3,200 stock on ₹ 50,000 balance needs ≥ 20% to get >1 share).
 POSITION_SIZE_PCT = 0.20        # 20 % of balance per trade (cash cap)
 MAX_DAILY_LOSS_PCT = 0.03       # halt after -3 % drawdown on the day
 
+# ---------------------------------------------------------------------------
 # Cooldown — re-entry prevention after stop loss
+# ---------------------------------------------------------------------------
 COOLDOWN_HOURS = 4              # hours to block re-entry after a SL hit; 0 = disabled
 
+# ---------------------------------------------------------------------------
 # Market regime — crash detection
+# ---------------------------------------------------------------------------
 NIFTY_CRASH_PCT = 1.0           # if Nifty is down more than this % today → defensive mode
 NIFTY_CRASH_DAYS = 2            # OR this many consecutive down-days → defensive mode
 
+# ---------------------------------------------------------------------------
 # Stale position guard
+# ---------------------------------------------------------------------------
 STALE_POSITION_HOURS = 6        # force-close any position held longer than this; 0 = disabled
 
 # ---------------------------------------------------------------------------
@@ -38,11 +45,12 @@ NIFTY50_SYMBOLS = [
     "LT", "HCLTECH", "AXISBANK", "ASIANPAINT", "MARUTI",
     "SUNPHARMA", "TITAN", "BAJFINANCE", "WIPRO", "ULTRACEMCO",
     "NTPC", "POWERGRID", "ONGC", "COALINDIA", "JSWSTEEL",
-    "TATAMOTORS-BE", "TATASTEEL", "ADANIENT", "ADANIPORTS", "BAJAJFINSV",
+    "JSWSTEEL", "TATASTEEL", "ADANIENT", "ADANIPORTS", "BAJAJFINSV",
     "BPCL", "BRITANNIA", "CIPLA", "DIVISLAB", "DRREDDY",
     "EICHERMOT", "GRASIM", "HEROMOTOCO", "INDUSINDBK", "NESTLEIND",
     "SBILIFE", "SHREECEM", "TECHM", "TATACONSUM", "UPL",
     "HDFCLIFE", "HINDALCO", "M&M", "APOLLOHOSP", "BAJAJ-AUTO",
+    
 ]
 UNIVERSE_TOP_N = 20             # pick top N by morning scan score
 
@@ -63,7 +71,7 @@ NSE_SUFFIX = ".NS"              # appended to symbols for yfinance
 ORB_MINUTES = 30                # first 30-min candles define the range
 
 # VWAP
-VWAP_BAND_STD = 1.0             # ±1 σ bands around VWAP
+VWAP_BAND_STD = 1.0             # ± 1 σ bands around VWAP
 
 # Momentum
 MOMENTUM_RSI_PERIOD = 14

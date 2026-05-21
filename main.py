@@ -278,6 +278,7 @@ def main():
 
     universe: list[str] = []
     last_scan_date = None
+    last_eod_date = None
 
     def handle_shutdown(sig, frame):
         logger.info("Shutdown signal received — closing AI client")
@@ -319,7 +320,8 @@ def main():
 
         # ---- EOD close all positions and always send daily summary ----
         eod_t = parse_ist_time(EOD_SUMMARY_TIME)
-        if market_day and now_time >= eod_t:
+        if market_day and now_time >= eod_t and last_eod_date != today:
+            last_eod_date = today
             if trader.positions:
                 logger.info("EOD: force-closing all positions")
                 prices = {}
