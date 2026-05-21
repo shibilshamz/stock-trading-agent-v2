@@ -305,6 +305,21 @@ class PaperTrader:
             logger.error("CSV duplicate check failed for %s: %s", symbol, exc)
             return False
 
+
+    def _git_push(self):
+        """Auto-push trade logs to GitHub after every trade."""
+        import subprocess
+        try:
+            subprocess.run(["git", "add", "logs/trades.csv", "logs/paper_state.json"],
+                cwd="/root/stock-trading-agent-v2", capture_output=True)
+            subprocess.run(["git", "commit", "-m", "chore: update trade logs [skip ci]"],
+                cwd="/root/stock-trading-agent-v2", capture_output=True)
+            subprocess.run(["git", "push", "origin", "master"],
+                cwd="/root/stock-trading-agent-v2", capture_output=True)
+            logger.info("Auto-pushed trade logs to GitHub")
+        except Exception as exc:
+            logger.warning("Git push failed: %s", exc)
+
     def _append_csv(self, row: dict):
         os.makedirs(LOG_DIR, exist_ok=True)
         write_header = not os.path.exists(TRADES_CSV) or os.path.getsize(TRADES_CSV) == 0
@@ -336,6 +351,7 @@ class PaperTrader:
             os.replace(tmp, STATE_FILE)
         except Exception as exc:
             logger.error("Failed to save state: %s", exc)
+        self._git_push()
 
     def _load_state(self):
         if not os.path.exists(STATE_FILE):
