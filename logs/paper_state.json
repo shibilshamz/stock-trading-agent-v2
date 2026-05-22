@@ -1,5 +1,5 @@
 {
-  "cash": 24617.699609375,
+  "cash": 16632.599609375,
   "positions": {
     "WIPRO": {
       "symbol": "WIPRO",
@@ -39,6 +39,20 @@
       "position_value": 7013.0,
       "risk_amount": 37.63,
       "opened_at": "2026-05-22T07:04:40.511729+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0
+    },
+    "ASIANPAINT": {
+      "symbol": "ASIANPAINT",
+      "action": "BUY",
+      "entry_price": 2661.7,
+      "stop_loss": 2647.45,
+      "take_profit": 2690.2,
+      "quantity": 3,
+      "position_value": 7985.1,
+      "risk_amount": 42.76,
+      "opened_at": "2026-05-22T07:45:53.128238+00:00",
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 1.0
