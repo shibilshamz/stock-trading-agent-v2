@@ -34,6 +34,7 @@ from config import (
     MORNING_SCAN_TIME,
     PAPER_BALANCE,
     SCAN_INTERVAL_SECONDS,
+    STALE_POSITION_HOURS,
 )
 from data.market_data import fetch_all, latest_price
 from data.universe import get_trading_universe
@@ -114,7 +115,20 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
             reason=trade["reason"],
         )
 
+    stale = trader.close_stale_positions(prices, STALE_POSITION_HOURS, reason="STALE_TIMEOUT")
+    for trade in stale:
+        alert_trade_closed(
+            symbol=trade["symbol"],
+            action=trade["action"],
+            qty=trade["quantity"],
+            entry=trade["entry_price"],
+            exit_price=trade["exit_price"],
+            pnl=trade["pnl"],
+            reason=trade["reason"],
+        )
+
     snapshot = trader.portfolio_snapshot(prices)
+    signal_cooldown: dict[str, datetime] = {}
 
     for sym in universe:
         df = candles.get(sym)
@@ -135,13 +149,17 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
             decision = ai.decide(sym, tech, sentiment, portfolio_state)
             action   = decision["action"]
 
-            alert_signal(
-                symbol=sym,
-                score=tech["composite_score"],
-                action=action,
-                confidence=decision["confidence"],
-                ai_reason=decision["reason"],
-            )
+            now_ts = ist_now()
+            last_signal = signal_cooldown.get(sym)
+            if last_signal is None or (now_ts - last_signal).total_seconds() >= 900:
+                alert_signal(
+                    symbol=sym,
+                    score=tech["composite_score"],
+                    action=action,
+                    confidence=decision["confidence"],
+                    ai_reason=decision["reason"],
+                )
+                signal_cooldown[sym] = now_ts
 
             if action in ("BUY", "SELL") and sym not in trader.positions:
                 if len(trader.positions) >= MAX_OPEN_POSITIONS:
@@ -261,6 +279,30 @@ def run_once():
 
 
 # ---------------------------------------------------------------------------
+# Prior-day position cleanup
+# ---------------------------------------------------------------------------
+
+def _close_prior_day_positions(trader: PaperTrader) -> list[dict]:
+    """Force-close positions whose opened_at date is before today IST."""
+    today_ist = ist_now().date()
+    closed = []
+    for sym, pos in list(trader.positions.items()):
+        try:
+            opened_at = datetime.fromisoformat(pos["opened_at"])
+            if opened_at.tzinfo is None:
+                opened_at = opened_at.replace(tzinfo=pytz.utc)
+            opened_date_ist = opened_at.astimezone(IST).date()
+        except (ValueError, KeyError):
+            continue
+        if opened_date_ist < today_ist:
+            price = latest_price(sym) or pos["entry_price"]
+            record = trader.close_position(sym, price, reason="PRIOR_DAY")
+            if record:
+                closed.append(record)
+    return closed
+
+
+# ---------------------------------------------------------------------------
 # Main loop (Railway / local)
 # ---------------------------------------------------------------------------
 
@@ -274,6 +316,18 @@ def main():
         return
 
     trader = PaperTrader(PAPER_BALANCE)
+
+    for trade in _close_prior_day_positions(trader):
+        alert_trade_closed(
+            symbol=trade["symbol"],
+            action=trade["action"],
+            qty=trade["quantity"],
+            entry=trade["entry_price"],
+            exit_price=trade["exit_price"],
+            pnl=trade["pnl"],
+            reason=trade["reason"],
+        )
+
     ai     = AIEngine()
 
     universe: list[str] = []
