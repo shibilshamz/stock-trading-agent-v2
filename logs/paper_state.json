@@ -1,47 +1,33 @@
 {
-  "cash": 22382.739755859373,
+  "cash": 33299.869609375,
   "positions": {
-    "HINDUNILVR": {
-      "symbol": "HINDUNILVR",
+    "DIVISLAB": {
+      "symbol": "DIVISLAB",
       "action": "BUY",
-      "entry_price": 2210.5,
-      "stop_loss": 2202.4,
-      "take_profit": 2226.69,
-      "quantity": 4,
-      "position_value": 8842.0,
-      "risk_amount": 32.38,
-      "opened_at": "2026-05-26T07:02:46.920210+00:00",
+      "entry_price": 6825.0,
+      "stop_loss": 6786.79,
+      "take_profit": 6901.43,
+      "quantity": 1,
+      "position_value": 6825.0,
+      "risk_amount": 38.21,
+      "opened_at": "2026-05-27T07:51:49.601358+00:00",
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 1.0
     },
-    "M&M": {
-      "symbol": "M&M",
-      "action": "SELL",
-      "entry_price": 3116.3,
-      "stop_loss": 3128.24,
-      "take_profit": 3092.41,
-      "quantity": 3,
-      "position_value": 9348.9,
-      "risk_amount": 35.83,
-      "opened_at": "2026-05-26T07:50:07.105858+00:00",
-      "confidence": 0.7,
-      "ai_source": "fallback",
-      "composite_score": -0.6
-    },
-    "GRASIM": {
-      "symbol": "GRASIM",
-      "action": "SELL",
-      "entry_price": 3164.7,
-      "stop_loss": 3178.87,
-      "take_profit": 3136.36,
-      "quantity": 3,
-      "position_value": 9494.1,
-      "risk_amount": 42.5,
-      "opened_at": "2026-05-26T07:50:18.152361+00:00",
-      "confidence": 0.7,
-      "ai_source": "fallback",
-      "composite_score": -0.6
+    "POWERGRID": {
+      "symbol": "POWERGRID",
+      "action": "BUY",
+      "entry_price": 298.95,
+      "stop_loss": 297.83,
+      "take_profit": 301.2,
+      "quantity": 33,
+      "position_value": 9865.35,
+      "risk_amount": 37.12,
+      "opened_at": "2026-05-27T07:51:55.514022+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0
     }
   },
   "trade_log": [
@@ -260,7 +246,61 @@
       "pnl": -29.76,
       "reason": "STOP_LOSS",
       "closed_at": "2026-05-26T07:49:20.270640+00:00"
+    },
+    {
+      "symbol": "HINDUNILVR",
+      "action": "BUY",
+      "entry_price": 2210.5,
+      "stop_loss": 2202.4,
+      "take_profit": 2226.69,
+      "quantity": 4,
+      "position_value": 8842.0,
+      "risk_amount": 32.38,
+      "opened_at": "2026-05-26T07:02:46.920210+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0,
+      "exit_price": 2202.4,
+      "pnl": -32.4,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-05-27T07:50:29.623383+00:00"
+    },
+    {
+      "symbol": "M&M",
+      "action": "SELL",
+      "entry_price": 3116.3,
+      "stop_loss": 3128.24,
+      "take_profit": 3092.41,
+      "quantity": 3,
+      "position_value": 9348.9,
+      "risk_amount": 35.83,
+      "opened_at": "2026-05-26T07:50:07.105858+00:00",
+      "confidence": 0.7,
+      "ai_source": "fallback",
+      "composite_score": -0.6,
+      "exit_price": 3128.24,
+      "pnl": -35.82,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-05-27T07:50:29.624887+00:00"
+    },
+    {
+      "symbol": "GRASIM",
+      "action": "SELL",
+      "entry_price": 3164.7,
+      "stop_loss": 3178.87,
+      "take_profit": 3136.36,
+      "quantity": 3,
+      "position_value": 9494.1,
+      "risk_amount": 42.5,
+      "opened_at": "2026-05-26T07:50:18.152361+00:00",
+      "confidence": 0.7,
+      "ai_source": "fallback",
+      "composite_score": -0.6,
+      "exit_price": 3167.8,
+      "pnl": -9.3,
+      "reason": "STALE_TIMEOUT",
+      "closed_at": "2026-05-27T07:50:30.414480+00:00"
     }
   ],
-  "daily_pnl": 42.940146484375106
+  "daily_pnl": -34.579999999998876
 }
