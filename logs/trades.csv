@@ -46,3 +46,4 @@ timestamp_ist,symbol,action,entry_price,quantity,stop_loss,target,confidence,ai_
 2026-06-01 14:34:20,BPCL,SELL,303.35,32,305.02,300.0,0.7,fallback,-1.0,CLOSED,107.2
 2026-06-01 14:34:20,M&M,SELL,3085.3,3,3102.42,3051.05,0.7,fallback,-1.0,CLOSED,102.75
 2026-06-01 14:35:28,HINDALCO,BUY,1139.0,8,1133.19,1150.61,0.8,groq,0.6,OPEN,0.0
+2026-06-01 14:57:42,NTPC,SELL,378.95,26,381.81,373.24,0.8,groq,-1.0,OPEN,0.0

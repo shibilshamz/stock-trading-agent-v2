@@ -1,5 +1,5 @@
 {
-  "cash": 41197.53954833984,
+  "cash": 31344.839548339838,
   "positions": {
     "HINDALCO": {
       "symbol": "HINDALCO",
@@ -14,6 +14,20 @@
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 0.6
+    },
+    "NTPC": {
+      "symbol": "NTPC",
+      "action": "SELL",
+      "entry_price": 378.95,
+      "stop_loss": 381.81,
+      "take_profit": 373.24,
+      "quantity": 26,
+      "position_value": 9852.7,
+      "risk_amount": 74.25,
+      "opened_at": "2026-06-01T09:27:42.233702+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": -1.0
     }
   },
   "trade_log": [
