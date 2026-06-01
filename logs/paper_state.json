@@ -1,47 +1,19 @@
 {
-  "cash": 22149.14954833984,
+  "cash": 41197.53954833984,
   "positions": {
-    "TECHM": {
-      "symbol": "TECHM",
+    "HINDALCO": {
+      "symbol": "HINDALCO",
       "action": "BUY",
-      "entry_price": 1485.0,
-      "stop_loss": 1478.55,
-      "take_profit": 1497.89,
-      "quantity": 6,
-      "position_value": 8910.0,
-      "risk_amount": 38.67,
-      "opened_at": "2026-05-29T07:42:40.746971+00:00",
+      "entry_price": 1139.0,
+      "stop_loss": 1133.19,
+      "take_profit": 1150.61,
+      "quantity": 8,
+      "position_value": 9112.0,
+      "risk_amount": 46.46,
+      "opened_at": "2026-06-01T09:05:28.266985+00:00",
       "confidence": 0.8,
       "ai_source": "groq",
-      "composite_score": 1.0
-    },
-    "BPCL": {
-      "symbol": "BPCL",
-      "action": "SELL",
-      "entry_price": 303.35,
-      "stop_loss": 305.02,
-      "take_profit": 300.0,
-      "quantity": 32,
-      "position_value": 9707.2,
-      "risk_amount": 53.58,
-      "opened_at": "2026-05-29T07:43:15.650573+00:00",
-      "confidence": 0.7,
-      "ai_source": "fallback",
-      "composite_score": -1.0
-    },
-    "M&M": {
-      "symbol": "M&M",
-      "action": "SELL",
-      "entry_price": 3085.3,
-      "stop_loss": 3102.42,
-      "take_profit": 3051.05,
-      "quantity": 3,
-      "position_value": 9255.9,
-      "risk_amount": 51.37,
-      "opened_at": "2026-05-29T07:43:43.938639+00:00",
-      "confidence": 0.7,
-      "ai_source": "fallback",
-      "composite_score": -1.0
+      "composite_score": 0.6
     }
   },
   "trade_log": [
@@ -404,7 +376,61 @@
       "pnl": 69.55,
       "reason": "STALE_TIMEOUT",
       "closed_at": "2026-05-29T07:41:32.962230+00:00"
+    },
+    {
+      "symbol": "TECHM",
+      "action": "BUY",
+      "entry_price": 1485.0,
+      "stop_loss": 1478.55,
+      "take_profit": 1497.89,
+      "quantity": 6,
+      "position_value": 8910.0,
+      "risk_amount": 38.67,
+      "opened_at": "2026-05-29T07:42:40.746971+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0,
+      "exit_price": 1497.89,
+      "pnl": 77.34,
+      "reason": "TAKE_PROFIT",
+      "closed_at": "2026-06-01T09:04:20.409184+00:00"
+    },
+    {
+      "symbol": "BPCL",
+      "action": "SELL",
+      "entry_price": 303.35,
+      "stop_loss": 305.02,
+      "take_profit": 300.0,
+      "quantity": 32,
+      "position_value": 9707.2,
+      "risk_amount": 53.58,
+      "opened_at": "2026-05-29T07:43:15.650573+00:00",
+      "confidence": 0.7,
+      "ai_source": "fallback",
+      "composite_score": -1.0,
+      "exit_price": 300.0,
+      "pnl": 107.2,
+      "reason": "TAKE_PROFIT",
+      "closed_at": "2026-06-01T09:04:20.411304+00:00"
+    },
+    {
+      "symbol": "M&M",
+      "action": "SELL",
+      "entry_price": 3085.3,
+      "stop_loss": 3102.42,
+      "take_profit": 3051.05,
+      "quantity": 3,
+      "position_value": 9255.9,
+      "risk_amount": 51.37,
+      "opened_at": "2026-05-29T07:43:43.938639+00:00",
+      "confidence": 0.7,
+      "ai_source": "fallback",
+      "composite_score": -1.0,
+      "exit_price": 3051.05,
+      "pnl": 102.75,
+      "reason": "TAKE_PROFIT",
+      "closed_at": "2026-06-01T09:04:20.412664+00:00"
     }
   ],
-  "daily_pnl": -2.550061035155153
+  "daily_pnl": 284.73993896484615
 }
