@@ -78,6 +78,14 @@ def is_market_open() -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Module-level state that must persist across scan cycles
+# ---------------------------------------------------------------------------
+
+signal_cooldown: dict[str, datetime] = {}      # last alert time per symbol
+daily_traded_symbols: set[str] = set()         # symbols closed (SL/TP/stale) today
+
+
+# ---------------------------------------------------------------------------
 # Core scan-and-trade loop
 # ---------------------------------------------------------------------------
 
@@ -105,6 +113,7 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
     # Auto-close any SL/TP hits first — pass candles so Low/High are used
     closed = trader.check_positions(prices, candles)
     for trade in closed:
+        daily_traded_symbols.add(trade["symbol"])
         alert_trade_closed(
             symbol=trade["symbol"],
             action=trade["action"],
@@ -117,6 +126,7 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
 
     stale = trader.close_stale_positions(prices, STALE_POSITION_HOURS, reason="STALE_TIMEOUT")
     for trade in stale:
+        daily_traded_symbols.add(trade["symbol"])
         alert_trade_closed(
             symbol=trade["symbol"],
             action=trade["action"],
@@ -128,12 +138,15 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
         )
 
     snapshot = trader.portfolio_snapshot(prices)
-    signal_cooldown: dict[str, datetime] = {}
 
     for sym in universe:
         df = candles.get(sym)
         if df is None or df.empty:
             logger.debug("No candles for %s — skipping", sym)
+            continue
+
+        if sym in daily_traded_symbols:
+            logger.debug("Already traded %s today — skipping re-entry", sym)
             continue
 
         try:
@@ -357,6 +370,8 @@ def main():
         ):
             try:
                 trader.reset_daily_pnl()
+                signal_cooldown.clear()
+                daily_traded_symbols.clear()
                 universe = get_trading_universe()
                 last_scan_date = today
                 alert_startup(universe, trader.cash)
