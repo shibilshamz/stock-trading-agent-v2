@@ -265,8 +265,8 @@
     });
 
     // Actions bar chart
-    const buys  = rows.filter(r => r.action === 'BUY').length;
-    const sells = rows.filter(r => r.action === 'SELL').length;
+    const buys  = closed.filter(r => r.action === 'BUY').length;
+    const sells = closed.filter(r => r.action === 'SELL').length;
 
     if (actionChart) actionChart.destroy();
     actionChart = new Chart(document.getElementById('action-chart'), {
@@ -294,9 +294,10 @@
   // Stats cards
   // ---------------------------------------------------------------------------
   function renderStats(rows) {
-    const STARTING = 50000;
-    const closed = rows.filter(r => r.status === 'CLOSED');
-    const open   = rows.filter(r => r.status === 'OPEN');
+    const STARTING   = 50000;
+    const closed     = rows.filter(r => r.status === 'CLOSED');
+    const closedKeys = new Set(closed.map(r => r.symbol + '|' + r.entry_price));
+    const open       = rows.filter(r => r.status === 'OPEN' && !closedKeys.has(r.symbol + '|' + r.entry_price));
 
     const realisedPnl = closed.reduce((s, r) => s + +r.pnl, 0);
     const balance     = STARTING + realisedPnl;
@@ -320,7 +321,8 @@
   // ---------------------------------------------------------------------------
   function renderTable(rows) {
     const tbody = document.getElementById('trade-body');
-    const sorted = [...rows].sort(
+    const closedOnly = rows.filter(r => r.status === 'CLOSED');
+    const sorted = [...closedOnly].sort(
       (a, b) => new Date(b.timestamp_ist) - new Date(a.timestamp_ist)
     );
 
@@ -407,15 +409,16 @@
       const pct = v => ({ v: +v || 0, t: 'n', z: '0.00%' });
 
       // ── Computed stats ───────────────────────────────────────────────
-      const closed   = rows.filter(r => r.status === 'CLOSED');
-      const open     = rows.filter(r => r.status === 'OPEN');
+      const closed     = rows.filter(r => r.status === 'CLOSED');
+      const closedKeys = new Set(closed.map(r => r.symbol + '|' + r.entry_price));
+      const open       = rows.filter(r => r.status === 'OPEN' && !closedKeys.has(r.symbol + '|' + r.entry_price));
       const realPnl  = closed.reduce((s, r) => s + (+r.pnl || 0), 0);
       const wins     = closed.filter(r => +r.pnl > 0).length;
       const byPnl    = [...closed].sort((a, b) => +b.pnl - +a.pnl);
       const best     = byPnl[0];
       const worst    = byPnl[byPnl.length - 1];
-      const buys     = rows.filter(r => r.action === 'BUY').length;
-      const sells    = rows.filter(r => r.action === 'SELL').length;
+      const buys     = closed.filter(r => r.action === 'BUY').length;
+      const sells    = closed.filter(r => r.action === 'SELL').length;
       const genTime  = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
 
       // ── Sheet 1: Summary ─────────────────────────────────────────────
