@@ -277,6 +277,6 @@ GitHub Actions provides a cron-based fallback scan cycle during market hours if 
 **Shibil Shamsudheen**  
 AI Builder · Workflow Automation · Dubai, UAE
 
-[LinkedIn](https://linkedin.com/in/shibil-shamsudheen) · [GitHub](https://github.com/shibilshamz) · shamz.shibil@gmail.com
+[LinkedIn](https://linkedin.com/in/shibil-shamsudheen) · [GitHub](https://github.com/shibilshamz) · shibilshamz123@gmail.com
 
 > *Built end-to-end using AI-assisted development — proof that domain expertise + the right tools produces real systems.*
