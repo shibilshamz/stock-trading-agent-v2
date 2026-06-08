@@ -1,16 +1,30 @@
 {
-  "cash": 41634.258651123055,
+  "cash": 32013.93865112305,
   "positions": {
-    "ASIANPAINT": {
-      "symbol": "ASIANPAINT",
+    "APOLLOHOSP": {
+      "symbol": "APOLLOHOSP",
       "action": "BUY",
-      "entry_price": 2698.6,
-      "stop_loss": 2686.46,
-      "take_profit": 2722.88,
-      "quantity": 3,
-      "position_value": 8095.8,
-      "risk_amount": 36.41,
-      "opened_at": "2026-06-05T07:56:16.567275+00:00",
+      "entry_price": 8436.5,
+      "stop_loss": 8406.14,
+      "take_profit": 8497.22,
+      "quantity": 1,
+      "position_value": 8436.5,
+      "risk_amount": 30.36,
+      "opened_at": "2026-06-08T08:32:18.121833+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0
+    },
+    "HCLTECH": {
+      "symbol": "HCLTECH",
+      "action": "BUY",
+      "entry_price": 1155.4,
+      "stop_loss": 1150.93,
+      "take_profit": 1164.34,
+      "quantity": 8,
+      "position_value": 9243.2,
+      "risk_amount": 35.75,
+      "opened_at": "2026-06-08T08:33:00.177245+00:00",
       "confidence": 0.8,
       "ai_source": "groq",
       "composite_score": 1.0
@@ -952,7 +966,25 @@
       "pnl": 50.8,
       "reason": "STALE_TIMEOUT",
       "closed_at": "2026-06-05T07:54:51.626917+00:00"
+    },
+    {
+      "symbol": "ASIANPAINT",
+      "action": "BUY",
+      "entry_price": 2698.6,
+      "stop_loss": 2686.46,
+      "take_profit": 2722.88,
+      "quantity": 3,
+      "position_value": 8095.8,
+      "risk_amount": 36.41,
+      "opened_at": "2026-06-05T07:56:16.567275+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": 1.0,
+      "exit_price": 2686.46,
+      "pnl": -36.42,
+      "reason": "STOP_LOSS",
+      "closed_at": "2026-06-08T08:31:23.100764+00:00"
     }
   ],
-  "daily_pnl": -177.79048828124962
+  "daily_pnl": -214.21048828124924
 }
