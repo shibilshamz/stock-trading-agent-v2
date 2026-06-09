@@ -1,21 +1,6 @@
 {
-  "cash": 41142.67904174805,
-  "positions": {
-    "TCS": {
-      "symbol": "TCS",
-      "action": "SELL",
-      "entry_price": 2140.0,
-      "stop_loss": 2147.83,
-      "take_profit": 2124.34,
-      "quantity": 4,
-      "position_value": 8560.0,
-      "risk_amount": 31.32,
-      "opened_at": "2026-06-09T07:51:22.768260+00:00",
-      "confidence": 0.8,
-      "ai_source": "groq",
-      "composite_score": -1.0
-    }
-  },
+  "cash": 49658.67904174805,
+  "positions": {},
   "trade_log": [
     {
       "symbol": "APOLLOHOSP",
@@ -1060,7 +1045,25 @@
       "pnl": -61.6,
       "reason": "EOD",
       "closed_at": "2026-06-09T14:37:39.377353+00:00"
+    },
+    {
+      "symbol": "TCS",
+      "action": "SELL",
+      "entry_price": 2140.0,
+      "stop_loss": 2147.83,
+      "take_profit": 2124.34,
+      "quantity": 4,
+      "position_value": 8560.0,
+      "risk_amount": 31.32,
+      "opened_at": "2026-06-09T07:51:22.768260+00:00",
+      "confidence": 0.8,
+      "ai_source": "groq",
+      "composite_score": -1.0,
+      "exit_price": 2151.0,
+      "pnl": -44.0,
+      "reason": "EOD",
+      "closed_at": "2026-06-09T14:37:41.023300+00:00"
     }
   ],
-  "daily_pnl": 1.300390625000773
+  "daily_pnl": -42.69960937499923
 }
