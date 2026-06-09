@@ -307,18 +307,8 @@ class PaperTrader:
 
 
     def _git_push(self):
-        """Auto-push trade logs to GitHub after every trade."""
-        import subprocess
-        try:
-            subprocess.run(["git", "add", "logs/trades.csv", "logs/paper_state.json"],
-                cwd="/root/stock-trading-agent-v2", capture_output=True)
-            subprocess.run(["git", "commit", "-m", "chore: update trade logs [skip ci]"],
-                cwd="/root/stock-trading-agent-v2", capture_output=True)
-            subprocess.run(["git", "push", "origin", "master"],
-                cwd="/root/stock-trading-agent-v2", capture_output=True)
-            logger.info("Auto-pushed trade logs to GitHub")
-        except Exception as exc:
-            logger.warning("Git push failed: %s", exc)
+        """No-op: state files are now gitignored. Balance was resetting because git conflicts overwrote paper_state.json on VPS."""
+        pass
 
     def _append_csv(self, row: dict):
         os.makedirs(LOG_DIR, exist_ok=True)

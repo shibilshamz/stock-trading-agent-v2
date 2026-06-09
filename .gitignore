@@ -24,7 +24,9 @@ ENV/
 *.env.local
 *.env.production
 
-# Logs & runtime state  (trades.csv and paper_state.json are committed by the workflow)
+# Runtime state — lives on VPS only, never committed
+logs/paper_state.json
+logs/trades.csv
 logs/agent.log
 
 # Claude Code
@@ -36,4 +38,4 @@ logs/agent.log
 *.swp
 *.swo
 .DS_Store
-Thumbs.db
+Thumbbs.db
