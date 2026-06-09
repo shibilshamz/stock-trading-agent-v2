@@ -13,7 +13,6 @@ from config import (
     NIFTY50_SYMBOLS,
     NSE_SUFFIX,
     UNIVERSE_TOP_N,
-    ATR_PERIOD,
 )
 
 logger = logging.getLogger(__name__)
@@ -37,9 +36,9 @@ def _score_symbol(daily: pd.DataFrame) -> float:
     """
     Composite morning-scan score (0-1).
     Components:
-      - Overnight gap magnitude (30 %)
-      - Volume relative to 5-day avg (40 %)
-      - ATR / price  — liquidity & volatility (30 %)
+      - Overnight gap magnitude (30%)
+      - Volume relative to 5-day avg (40%)
+      - EMA slope direction over 3 days — trending up scores higher (30%)
     """
     if daily is None or len(daily) < 3:
         return 0.0
@@ -47,13 +46,11 @@ def _score_symbol(daily: pd.DataFrame) -> float:
     try:
         close  = daily["Close"].dropna()
         volume = daily["Volume"].dropna()
-        high   = daily["High"].dropna()
-        low    = daily["Low"].dropna()
 
         if len(close) < 2:
             return 0.0
 
-        # Gap score: absolute % gap of latest open vs prev close, capped at 5 %
+        # Gap score: absolute % gap of latest open vs prev close, capped at 5%
         prev_close = close.iloc[-2]
         today_open = daily["Open"].iloc[-1]
         gap_pct = abs((today_open - prev_close) / prev_close) if prev_close else 0
@@ -64,17 +61,16 @@ def _score_symbol(daily: pd.DataFrame) -> float:
         vol_ratio = (volume.iloc[-1] / vol_mean) if vol_mean else 1.0
         vol_score = min(vol_ratio / 3.0, 1.0)
 
-        # ATR / price
-        tr = pd.concat([
-            high - low,
-            (high - close.shift(1)).abs(),
-            (low  - close.shift(1)).abs(),
-        ], axis=1).max(axis=1)
-        atr = tr.rolling(min(ATR_PERIOD, len(tr))).mean().iloc[-1]
-        atr_pct = (atr / close.iloc[-1]) if close.iloc[-1] else 0
-        atr_score = min(atr_pct / 0.03, 1.0)   # normalise to 3 % ATR/price
+        # Trend score: replace ATR/price with EMA slope direction over last 3 days
+        # Positive slope = trending up = better ORB candidate
+        if len(close) >= 3:
+            ema = close.ewm(span=9, adjust=False).mean()
+            slope = (ema.iloc[-1] - ema.iloc[-3]) / ema.iloc[-3] if ema.iloc[-3] else 0
+            trend_score = min(abs(slope) / 0.02, 1.0) if slope > 0 else 0.0
+        else:
+            trend_score = 0.0
 
-        return round(0.30 * gap_score + 0.40 * vol_score + 0.30 * atr_score, 4)
+        return round(0.30 * gap_score + 0.40 * vol_score + 0.30 * trend_score, 4)
 
     except Exception as exc:
         logger.debug("Scoring failed: %s", exc)
