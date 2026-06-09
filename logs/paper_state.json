@@ -1,20 +1,6 @@
 {
-  "cash": 12450.978651123049,
+  "cash": 22208.97865112305,
   "positions": {
-    "POWERGRID": {
-      "symbol": "POWERGRID",
-      "action": "SELL",
-      "entry_price": 286.25,
-      "stop_loss": 287.6,
-      "take_profit": 283.55,
-      "quantity": 34,
-      "position_value": 9732.5,
-      "risk_amount": 45.92,
-      "opened_at": "2026-06-09T07:06:22.586421+00:00",
-      "confidence": 0.7,
-      "ai_source": "fallback",
-      "composite_score": -1.0
-    },
     "HDFCLIFE": {
       "symbol": "HDFCLIFE",
       "action": "SELL",
@@ -1048,7 +1034,25 @@
       "pnl": 43.5,
       "reason": "STALE_TIMEOUT",
       "closed_at": "2026-06-09T07:04:46.709566+00:00"
+    },
+    {
+      "symbol": "POWERGRID",
+      "action": "SELL",
+      "entry_price": 286.25,
+      "stop_loss": 287.6,
+      "take_profit": 283.55,
+      "quantity": 34,
+      "position_value": 9732.5,
+      "risk_amount": 45.92,
+      "opened_at": "2026-06-09T07:06:22.586421+00:00",
+      "confidence": 0.7,
+      "ai_source": "fallback",
+      "composite_score": -1.0,
+      "exit_price": 285.5,
+      "pnl": 25.5,
+      "reason": "EOD",
+      "closed_at": "2026-06-09T14:37:36.239974+00:00"
     }
   ],
-  "daily_pnl": 0.0
+  "daily_pnl": 25.5
 }
