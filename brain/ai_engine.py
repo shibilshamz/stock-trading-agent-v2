@@ -178,7 +178,11 @@ class AIEngine:
 
     @staticmethod
     def _rule_based_fallback(technical: dict, sentiment: dict) -> dict:
-        """Simple deterministic fallback when Groq is unavailable."""
+        """Simple deterministic fallback when Groq is unavailable.
+
+        NOTE: Long-only agent. Negative scores return HOLD, never SELL, to prevent
+        fallback from opening short positions.
+        """
         score = technical.get("composite_score", 0)
         news  = sentiment.get("score", 0)
 
@@ -186,8 +190,12 @@ class AIEngine:
             action = "BUY"
             conf   = min(0.7, 0.5 + score)
         elif score <= -SIGNAL_THRESHOLD:
-            action = "SELL"
-            conf   = min(0.7, 0.5 + abs(score))
+            logger.warning(
+                "Fallback: negative composite score %.3f → HOLD (long-only, no shorting in fallback)",
+                score,
+            )
+            action = "HOLD"
+            conf   = 0.5
         else:
             action = "HOLD"
             conf   = 0.5
