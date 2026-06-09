@@ -138,7 +138,7 @@ def momentum_signal(df: pd.DataFrame) -> int:
     """
     EMA crossover combined with RSI confirmation.
     +1 → fast EMA > slow EMA and RSI not overbought
-    -1 → RSI overbought (>70, mean-reversion bearish) OR fast EMA < slow EMA and RSI not oversold
+    -1 → fast EMA < slow EMA AND RSI overbought (both must agree)
      0 → mixed or neutral
     """
     close     = df["Close"]
@@ -153,9 +153,9 @@ def momentum_signal(df: pd.DataFrame) -> int:
     if pd.isna(last_fast) or pd.isna(last_slow) or pd.isna(last_rsi):
         return 0
 
-    # Overbought RSI is a mean-reversion bearish signal regardless of EMA direction.
-    # Previously this returned 0, which prevented composite score from reaching -0.55.
-    if last_rsi > MOMENTUM_RSI_OVERBOUGHT:
+    # RSI overbought alone is NOT bearish — in a strong uptrend RSI stays >70 for hours.
+    # Only treat overbought as bearish if EMA is also bearish (both must agree).
+    if last_rsi > MOMENTUM_RSI_OVERBOUGHT and last_fast < last_slow:
         return -1
 
     bullish = last_fast > last_slow

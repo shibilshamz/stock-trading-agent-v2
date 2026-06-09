@@ -124,7 +124,13 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
             reason=trade["reason"],
         )
 
-    stale = trader.close_stale_positions(prices, STALE_POSITION_HOURS, reason="STALE_TIMEOUT")
+    # Use 3:15 PM hard close instead of hour-based stale timeout
+    now_ist = ist_now()
+    cutoff_t = parse_ist_time("15:15")
+    if now_ist.time() >= cutoff_t and trader.positions:
+        stale = trader.close_stale_positions(prices, max_hours=0.001, reason="EOD_CUTOFF")
+    else:
+        stale = trader.close_stale_positions(prices, STALE_POSITION_HOURS, reason="STALE_TIMEOUT")
     for trade in stale:
         daily_traded_symbols.add(trade["symbol"])
         alert_trade_closed(

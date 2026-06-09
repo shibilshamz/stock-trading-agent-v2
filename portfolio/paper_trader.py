@@ -37,6 +37,7 @@ class PaperTrader:
         self.positions:  dict  = {}   # symbol → position dict
         self.trade_log:  list  = []
         self.daily_pnl:  float = 0.0
+        self.symbol_daily_loss: dict = {}   # symbol → realised loss today
         self._load_state()
 
     # ------------------------------------------------------------------
@@ -63,6 +64,14 @@ class PaperTrader:
                 "Duplicate rejected: %s has an unclosed OPEN row in trades.csv "
                 "(in-memory state may be stale from restart)",
                 params.symbol,
+            )
+            return False
+
+        max_sym_loss = -(params.risk_amount * 2)
+        if self.symbol_daily_loss.get(params.symbol, 0.0) <= max_sym_loss:
+            logger.warning(
+                "Per-symbol daily loss cap hit for %s (loss=₹%.0f) — skipping",
+                params.symbol, self.symbol_daily_loss.get(params.symbol, 0.0)
             )
             return False
 
@@ -134,6 +143,8 @@ class PaperTrader:
         proceeds       = pos["position_value"] + pnl
         self.cash     += proceeds
         self.daily_pnl += pnl
+        if pnl < 0:
+            self.symbol_daily_loss[symbol] = self.symbol_daily_loss.get(symbol, 0.0) + pnl
 
         trade = {
             **pos,
@@ -245,6 +256,7 @@ class PaperTrader:
     def reset_daily_pnl(self):
         """Call at market open each day."""
         self.daily_pnl = 0.0
+        self.symbol_daily_loss.clear()
         self._save_state()
 
     def close_all_positions(self, prices: dict[str, float], reason: str = "EOD"):
