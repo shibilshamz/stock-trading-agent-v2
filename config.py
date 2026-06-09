@@ -86,13 +86,13 @@ WEIGHT_VWAP     = 0.30
 WEIGHT_MOMENTUM = 0.30
 
 # Minimum composite score to enter a trade
-SIGNAL_THRESHOLD = 0.55
+SIGNAL_THRESHOLD = 0.75
 
 # ---------------------------------------------------------------------------
 # Risk / sizing
 # ---------------------------------------------------------------------------
 STOP_LOSS_ATR_MULT  = 1.5       # stop = entry ± 1.5 × ATR
-TAKE_PROFIT_RR      = 2.0       # target = risk × 2
+TAKE_PROFIT_RR      = 3.0       # target = risk × 3
 ATR_PERIOD          = 14
 MAX_RISK_PER_TRADE_PCT = 0.01   # max 1 % of balance at risk per trade
 
