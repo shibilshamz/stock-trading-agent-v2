@@ -114,3 +114,4 @@ timestamp_ist,symbol,action,entry_price,quantity,stop_loss,target,confidence,ai_
 2026-06-09 12:36:44,INFY,SELL,1174.0,8,1178.95,1164.1,0.7,fallback,-0.6,OPEN,0.0
 2026-06-09 13:21:22,TCS,SELL,2140.0,4,2147.83,2124.34,0.8,groq,-1.0,OPEN,0.0
 2026-06-09 20:07:36,POWERGRID,SELL,286.25,34,287.6,283.55,0.7,fallback,-1.0,CLOSED,25.5
+2026-06-09 20:07:37,HDFCLIFE,SELL,562.7,17,565.68,556.74,0.7,fallback,-1.0,CLOSED,37.4
