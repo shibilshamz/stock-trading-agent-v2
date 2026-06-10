@@ -92,7 +92,7 @@ class PaperTrader:
             "quantity":        params.quantity,
             "position_value":  params.position_value,
             "risk_amount":     params.risk_amount,
-            "opened_at":       datetime.now(timezone.utc).isoformat(),
+            "opened_at":       datetime.now(_IST).isoformat(),
             "confidence":      confidence,
             "ai_source":       ai_source,
             "composite_score": composite_score,

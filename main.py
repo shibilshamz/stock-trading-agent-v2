@@ -309,8 +309,10 @@ def _close_prior_day_positions(trader: PaperTrader) -> list[dict]:
         try:
             opened_at = datetime.fromisoformat(pos["opened_at"])
             if opened_at.tzinfo is None:
-                opened_at = opened_at.replace(tzinfo=pytz.utc)
-            opened_date_ist = opened_at.astimezone(IST).date()
+                # No timezone info — assume IST (saved by updated open_position)
+                opened_date_ist = opened_at.date()
+            else:
+                opened_date_ist = opened_at.astimezone(IST).date()
         except (ValueError, KeyError):
             continue
         if opened_date_ist < today_ist:
