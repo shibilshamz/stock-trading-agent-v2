@@ -183,11 +183,8 @@
 </main>
 
 <script>
-  // VPS file server — serves logs/trades.csv directly (real-time, no git sync needed)
-  const VPS_URL  = 'http://72.61.233.142:8888';
-  const CSV_URL  = window.location.hostname === 'localhost'
-    ? '../logs/trades.csv'
-    : `${VPS_URL}/trades.csv`;
+  // Served from same VPS — relative URL avoids mixed-content/CORS issues
+  const CSV_URL  = '/trades.csv';
 
   // ---------------------------------------------------------------------------
   // Theme
