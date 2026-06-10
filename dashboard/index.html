@@ -183,16 +183,11 @@
 </main>
 
 <script>
-  // ---------------------------------------------------------------------------
-  // Config — change REPO to your GitHub username/repo
-  // ---------------------------------------------------------------------------
-  const REPO     = window.location.hostname === 'localhost'
-    ? null
-    : window.location.hostname.replace('.github.io', '') + '/' +
-      window.location.pathname.split('/').filter(Boolean)[0];
-  const CSV_URL  = REPO
-    ? `https://raw.githubusercontent.com/${REPO}/master/logs/trades.csv`
-    : '../logs/trades.csv';
+  // VPS file server — serves logs/trades.csv directly (real-time, no git sync needed)
+  const VPS_URL  = 'http://72.61.233.142:8888';
+  const CSV_URL  = window.location.hostname === 'localhost'
+    ? '../logs/trades.csv'
+    : `${VPS_URL}/trades.csv`;
 
   // ---------------------------------------------------------------------------
   // Theme
