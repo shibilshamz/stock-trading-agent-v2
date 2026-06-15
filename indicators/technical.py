@@ -1,6 +1,9 @@
 """
 Technical indicator calculations: VWAP, EMA, RSI, ATR, and composite signal.
 All functions accept a pandas DataFrame with OHLCV columns.
+
+Signals are continuous floats in [-1, +1] — not binary +1/0/-1.
+This means the composite score actually varies and the threshold filter works.
 """
 
 import logging
@@ -80,92 +83,101 @@ def calc_atr(df: pd.DataFrame, period: int = ATR_PERIOD) -> pd.Series:
 
 
 # ---------------------------------------------------------------------------
-# ORB signal  (−1 / 0 / +1)
+# Continuous ORB signal  (-1.0 to +1.0)
 # ---------------------------------------------------------------------------
 
-def orb_signal(df: pd.DataFrame, orb_minutes: int = ORB_MINUTES) -> int:
+def orb_signal(df: pd.DataFrame, orb_minutes: int = ORB_MINUTES) -> float:
     """
-    +1 → bullish breakout above opening-range high
-    -1 → bearish breakdown below opening-range low
-     0 → inside range or insufficient data
+    Continuous breakout strength above/below the opening range.
+    +1.0 → price is 1× ATR or more above ORB high (strong breakout)
+    -1.0 → price is 1× ATR or more below ORB low (strong breakdown)
+      0  → price is inside the opening range
+    Values between 0 and ±1 reflect how far into the breakout price has moved.
     """
     today = df.index[-1].date()
     today_df = df[df.index.date == today]
 
     candles_needed = max(1, orb_minutes // 15)
     if len(today_df) <= candles_needed:
-        return 0
+        return 0.0
 
     orb_high = today_df["High"].iloc[:candles_needed].max()
     orb_low  = today_df["Low"].iloc[:candles_needed].min()
     latest_close = today_df["Close"].iloc[-1]
+    atr = calc_atr(today_df).iloc[-1]
+
+    if pd.isna(atr) or atr == 0:
+        return 0.0
 
     if latest_close > orb_high:
-        return 1
+        strength = (latest_close - orb_high) / atr
+        return float(min(strength, 1.0))
     if latest_close < orb_low:
-        return -1
-    return 0
+        strength = (orb_low - latest_close) / atr
+        return float(-min(strength, 1.0))
+    return 0.0
 
 
 # ---------------------------------------------------------------------------
-# VWAP signal  (−1 / 0 / +1)
+# Continuous VWAP signal  (-1.0 to +1.0)
 # ---------------------------------------------------------------------------
 
-def vwap_signal(df: pd.DataFrame) -> int:
+def vwap_signal(df: pd.DataFrame) -> float:
     """
-    +1 → price above VWAP + momentum confirms
-    -1 → price below VWAP
-     0 → at VWAP or indeterminate
+    Continuous distance from VWAP normalized by band width.
+    +1.0 → price at or above upper VWAP band (very extended above VWAP)
+    -1.0 → price at or below lower VWAP band
+      0  → price exactly at VWAP
     """
     vwap, upper, lower = calc_vwap_bands(df)
     last_close = df["Close"].iloc[-1]
     last_vwap  = vwap.iloc[-1]
+    last_upper = upper.iloc[-1]
+    last_lower = lower.iloc[-1]
 
-    if pd.isna(last_vwap):
-        return 0
-    if last_close > last_vwap:
-        return 1
-    if last_close < last_vwap:
-        return -1
-    return 0
+    if pd.isna(last_vwap) or pd.isna(last_upper) or pd.isna(last_lower):
+        return 0.0
+
+    band_half = (last_upper - last_lower) / 2
+    if band_half == 0:
+        return 0.0
+
+    raw = (last_close - last_vwap) / band_half
+    return float(max(-1.0, min(1.0, raw)))
 
 
 # ---------------------------------------------------------------------------
-# Momentum signal  (−1 / 0 / +1)
+# Continuous Momentum signal  (-1.0 to +1.0)
 # ---------------------------------------------------------------------------
 
-def momentum_signal(df: pd.DataFrame) -> int:
+def momentum_signal(df: pd.DataFrame) -> float:
     """
-    EMA crossover combined with RSI confirmation.
-    +1 → fast EMA > slow EMA and RSI not overbought
-    -1 → fast EMA < slow EMA AND RSI overbought (both must agree)
-     0 → mixed or neutral
+    Combines EMA crossover strength with RSI position.
+    EMA component: how far fast EMA is above/below slow EMA (as % of price)
+    RSI component: normalized RSI position (50 = neutral, 70 = strong, 30 = weak)
+    Result is average of both, clipped to [-1, +1].
     """
-    close     = df["Close"]
-    ema_fast  = calc_ema(close, EMA_FAST)
-    ema_slow  = calc_ema(close, EMA_SLOW)
-    rsi       = calc_rsi(close)
+    close    = df["Close"]
+    ema_fast = calc_ema(close, EMA_FAST)
+    ema_slow = calc_ema(close, EMA_SLOW)
+    rsi      = calc_rsi(close)
 
-    last_fast = ema_fast.iloc[-1]
-    last_slow = ema_slow.iloc[-1]
-    last_rsi  = rsi.iloc[-1]
+    last_fast  = ema_fast.iloc[-1]
+    last_slow  = ema_slow.iloc[-1]
+    last_rsi   = rsi.iloc[-1]
+    last_close = close.iloc[-1]
 
-    if pd.isna(last_fast) or pd.isna(last_slow) or pd.isna(last_rsi):
-        return 0
+    if pd.isna(last_fast) or pd.isna(last_slow) or pd.isna(last_rsi) or last_close == 0:
+        return 0.0
 
-    # RSI overbought alone is NOT bearish — in a strong uptrend RSI stays >70 for hours.
-    # Only treat overbought as bearish if EMA is also bearish (both must agree).
-    if last_rsi > MOMENTUM_RSI_OVERBOUGHT and last_fast < last_slow:
-        return -1
+    # EMA component: % gap between fast and slow, scaled so 0.5% gap = ±0.5 signal
+    ema_gap_pct = (last_fast - last_slow) / last_close
+    ema_score   = float(max(-1.0, min(1.0, ema_gap_pct / 0.005)))
 
-    bullish = last_fast > last_slow
-    bearish = last_fast < last_slow and last_rsi > MOMENTUM_RSI_OVERSOLD
+    # RSI component: (RSI - 50) / 30 maps 80→+1, 50→0, 20→-1
+    rsi_score = float(max(-1.0, min(1.0, (last_rsi - 50) / 30)))
 
-    if bullish:
-        return 1
-    if bearish:
-        return -1
-    return 0
+    return round((ema_score + rsi_score) / 2, 4)
 
 
 # ---------------------------------------------------------------------------
@@ -184,7 +196,7 @@ def composite_score(df: pd.DataFrame) -> dict:
 
     score = WEIGHT_ORB * orb + WEIGHT_VWAP * vwap + WEIGHT_MOMENTUM * mom
 
-    atr_val = calc_atr(df).iloc[-1]
+    atr_val    = calc_atr(df).iloc[-1]
     last_close = float(df["Close"].iloc[-1])
 
     return {
