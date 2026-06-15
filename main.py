@@ -180,6 +180,11 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
                 )
                 signal_cooldown[sym] = now_ts
 
+            # No new entries after 14:30 IST — not enough time to hit target before EOD close
+            if ist_now().time() >= dtime(14, 30):
+                logger.info("Past 14:30 IST — skipping new entry for %s", sym)
+                continue
+
             if action in ("BUY", "SELL") and sym not in trader.positions:
                 if len(trader.positions) >= MAX_OPEN_POSITIONS:
                     logger.debug("Max positions (%d) reached — skipping %s", MAX_OPEN_POSITIONS, sym)
