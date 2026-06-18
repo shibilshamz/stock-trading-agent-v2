@@ -1,23 +1,11 @@
 name: NSE Trading Agent
 
-# ---------------------------------------------------------------------------
-# Schedule: every 15 minutes, Monday–Friday, 09:15–15:30 IST (03:45–10:00 UTC)
-#
-# Three expressions are needed because cron can't express "start at :45":
-#   1. 03:45 UTC — market open trigger (09:15 IST)
-#   2. every :00/:15/:30/:45 from 04:00–09:45 UTC (09:30–15:15 IST)
-#   3. 10:00 UTC — market close trigger (15:30 IST)
-#
-# Note: GitHub Actions scheduled jobs can run up to ~10 minutes late under
-# heavy platform load. The 14-minute job timeout ensures each run always
-# finishes before the next one would start.
-# ---------------------------------------------------------------------------
 on:
   schedule:
-    - cron: '45 3 * * 1-5'            # 03:45 UTC = 09:15 IST  (market open)
-    - cron: '0,15,30,45 4-9 * * 1-5'  # 04:00–09:45 UTC (09:30–15:15 IST)
-    - cron: '0 10 * * 1-5'            # 10:00 UTC = 15:30 IST  (market close)
-  workflow_dispatch:                   # manual trigger for testing
+    - cron: '45 3 * * 1-5'
+    - cron: '0,15,30,45 4-9 * * 1-5'
+    - cron: '0 10 * * 1-5'
+  workflow_dispatch:
 
 jobs:
   trade:
@@ -29,13 +17,21 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'               # caches ~/.cache/pip keyed on requirements.txt hash
+          cache: 'pip'
+
+      - name: Restore paper state cache
+        uses: actions/cache@v4
+        with:
+          path: logs/paper_state.json
+          key: paper-state-${{ github.ref_name }}
+          restore-keys: |
+            paper-state-
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -46,6 +42,13 @@ jobs:
           TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python main.py
+
+      - name: Save paper state cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: logs/paper_state.json
+          key: paper-state-${{ github.ref_name }}
 
       - name: Commit updated trade logs
         run: |
