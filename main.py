@@ -231,17 +231,21 @@ def run_scan(trader: PaperTrader, ai: AIEngine, universe: list[str]):
 # Single-cycle mode (GitHub Actions)
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Single-cycle mode (GitHub Actions)
+# ---------------------------------------------------------------------------
 def run_once():
     """
     Execute exactly one scan cycle and exit.
     Called when GITHUB_ACTIONS=true — the cron schedule is handled externally.
-    No persistent state between runs: universe is refreshed each invocation,
-    and paper_state.json is not cached across Actions jobs.
+    paper_state.json is restored from GHA cache before this runs.
     """
     now        = ist_now()
     now_time   = now.time()
     market_day = now.weekday() < 5
     eod_t      = parse_ist_time(EOD_SUMMARY_TIME)
+    morning_open_t = parse_ist_time(MARKET_OPEN_TIME)
+    morning_end_t  = parse_ist_time("10:00")
 
     logger.info("GitHub Actions mode — single scan cycle (%s IST)", now.strftime("%H:%M"))
 
@@ -249,14 +253,13 @@ def run_once():
         logger.info("Weekend — no trading. Exiting.")
         return
 
-    # Let EOD runs through even after market close — only block truly off-hours calls
-    if not is_market_open() and now_time < eod_t:
-        logger.info("Market closed at %s IST — no action. Exiting.", now.strftime("%H:%M"))
+    # Block truly off-hours runs (before 9:15 or after 16:00, but not EOD window)
+    if now_time < morning_open_t and now_time < eod_t:
+        logger.info("Pre-market at %s IST — no action. Exiting.", now.strftime("%H:%M"))
         return
 
-    # Hard cutoff: GitHub Actions free-tier jobs can be delayed 2+ hours.
-    # Any job arriving after 16:00 IST is stale — skip entirely to prevent
-    # opening positions after market close.
+    # Hard cutoff: GHA jobs can be delayed 2+ hours in queue.
+    # Any job arriving after 16:00 IST is stale — skip entirely.
     if now_time >= parse_ist_time("16:00"):
         logger.info("Past 16:00 IST hard cutoff (queue-delay guard) — exiting.")
         return
@@ -270,9 +273,8 @@ def run_once():
         alert_error("universe_scan", str(exc))
         return
 
-    # Morning reset: widen window to 10:00 so queue delays up to 45 min are tolerated
-    morning_open_t = parse_ist_time(MARKET_OPEN_TIME)
-    morning_end_t  = parse_ist_time("10:00")
+    # Morning window: reset daily P&L and send market open message
+    # Widened to 10:00 to tolerate GHA queue delays up to 45 min
     if morning_open_t <= now_time <= morning_end_t:
         trader.reset_daily_pnl()
         snap = trader.portfolio_snapshot({})
@@ -285,7 +287,7 @@ def run_once():
             logger.error("Scan error: %s", exc)
             alert_error("run_scan", str(exc))
 
-        # EOD: close all open positions and always send daily summary
+        # EOD: force-close all positions then send single closing summary
         if now_time >= eod_t:
             if trader.positions:
                 logger.info("EOD: force-closing all positions")
@@ -294,14 +296,11 @@ def run_once():
                     p = latest_price(sym)
                     prices[sym] = p if p else trader.positions[sym]["entry_price"]
                 trader.close_all_positions(prices, reason="EOD")
-            logger.info("EOD: sending daily summary")
+            logger.info("EOD: sending market close summary")
             snap = trader.portfolio_snapshot({})
-            alert_daily_summary(snap)
             alert_market_close(snap)
 
     logger.info("GitHub Actions scan complete — exiting cleanly.")
-
-
 # ---------------------------------------------------------------------------
 # Prior-day position cleanup
 # ---------------------------------------------------------------------------
