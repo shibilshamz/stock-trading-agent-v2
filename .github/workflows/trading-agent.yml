@@ -33,6 +33,20 @@ jobs:
           restore-keys: |
             paper-state-
 
+      - name: Seed paper state if missing
+        run: |
+          mkdir -p logs
+          if [ ! -f logs/paper_state.json ]; then
+            echo "No cached state found — seeding with real balance"
+            cat > logs/paper_state.json << 'SEED'
+          {"cash":49862.30940795899,"positions":{},"trade_log":[],"daily_pnl":0.0}
+          SEED
+            echo "Seeded logs/paper_state.json"
+          else
+            echo "Cache restored — using existing state"
+            cat logs/paper_state.json | python3 -c "import json,sys; s=json.load(sys.stdin); print(f'Cash: ₹{s[\"cash\"]:.2f}, Positions: {len(s[\"positions\"])}, Trades: {len(s[\"trade_log\"])}')"
+          fi
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
