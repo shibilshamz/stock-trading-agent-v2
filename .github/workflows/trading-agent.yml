@@ -5,6 +5,8 @@ on:
     - cron: '45 3 * * 1-5'
     - cron: '0,15,30,45 4-9 * * 1-5'
     - cron: '0 10 * * 1-5'
+    - cron: '15 10 * * 1-5'
+    - cron: '45 10 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -29,9 +31,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: logs/paper_state.json
-          key: paper-state-${{ github.ref_name }}
+          key: paper-state-${{ github.ref_name }}-${{ github.run_id }}
           restore-keys: |
-            paper-state-
+            paper-state-${{ github.ref_name }}-
 
       - name: Seed paper state if missing
         run: |
@@ -62,7 +64,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: logs/paper_state.json
-          key: paper-state-${{ github.ref_name }}
+          key: paper-state-${{ github.ref_name }}-${{ github.run_id }}
 
       - name: Commit updated trade logs
         run: |

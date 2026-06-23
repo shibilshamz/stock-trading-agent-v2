@@ -38,6 +38,7 @@ class PaperTrader:
         self.trade_log:  list  = []
         self.daily_pnl:  float = 0.0
         self.symbol_daily_loss: dict = {}   # symbol → realised loss today
+        self.last_eod_summary_date: Optional[str] = None   # YYYY-MM-DD — idempotency guard for stateless GHA runs
         self._load_state()
 
     # ------------------------------------------------------------------
@@ -259,6 +260,14 @@ class PaperTrader:
         self.symbol_daily_loss.clear()
         self._save_state()
 
+    def mark_eod_summary_sent(self, date) -> None:
+        """
+        Record that today's EOD summary was sent. Persisted so a delayed,
+        stateless GitHub Actions run doesn't resend it on a later invocation.
+        """
+        self.last_eod_summary_date = date.isoformat() if hasattr(date, "isoformat") else str(date)
+        self._save_state()
+
     def close_all_positions(self, prices: dict[str, float], reason: str = "EOD"):
         """Force-close all open positions at EOD."""
         for sym in list(self.positions.keys()):
@@ -345,6 +354,7 @@ class PaperTrader:
             "positions": self.positions,
             "trade_log": self.trade_log,
             "daily_pnl": self.daily_pnl,
+            "last_eod_summary_date": self.last_eod_summary_date,
         }
         tmp = STATE_FILE + ".tmp"
         try:
@@ -366,6 +376,7 @@ class PaperTrader:
             self.positions = state.get("positions", {})
             self.trade_log = state.get("trade_log", [])
             self.daily_pnl = state.get("daily_pnl", 0.0)
+            self.last_eod_summary_date = state.get("last_eod_summary_date")
             logger.info(
                 "Restored state: cash=₹%.0f, positions=%d",
                 self.cash, len(self.positions),

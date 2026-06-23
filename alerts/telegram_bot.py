@@ -4,6 +4,7 @@ All calls are fire-and-forget via httpx.
 """
 
 import logging
+import time
 from datetime import datetime
 from typing import Optional
 
@@ -17,29 +18,45 @@ logger = logging.getLogger(__name__)
 _IST = pytz.timezone("Asia/Kolkata")
 TELEGRAM_API = "https://api.telegram.org/bot{token}/sendMessage"
 
+_MAX_ATTEMPTS = 3
+_RETRY_DELAYS = [1.0, 2.0]   # seconds — wait before attempt 2, then before attempt 3
+
 
 def _send(text: str, parse_mode: str = "HTML") -> bool:
-    """Low-level send; returns True on success."""
+    """Low-level send with retry; returns True on success, never raises."""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         logger.debug("Telegram not configured — skipping alert")
         return False
 
     url = TELEGRAM_API.format(token=TELEGRAM_BOT_TOKEN)
-    try:
-        resp = httpx.post(
-            url,
-            json={
-                "chat_id":    TELEGRAM_CHAT_ID,
-                "text":       text,
-                "parse_mode": parse_mode,
-            },
-            timeout=10.0,
-        )
-        resp.raise_for_status()
-        return True
-    except Exception as exc:
-        logger.error("Telegram send failed: %s", exc)
-        return False
+    payload = {
+        "chat_id":    TELEGRAM_CHAT_ID,
+        "text":       text,
+        "parse_mode": parse_mode,
+    }
+
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        try:
+            resp = httpx.post(url, json=payload, timeout=10.0)
+            resp.raise_for_status()
+            return True
+        except Exception as exc:
+            logger.error(
+                "Telegram send failed (attempt %d/%d): %s",
+                attempt, _MAX_ATTEMPTS, exc,
+            )
+            if attempt == _MAX_ATTEMPTS:
+                break
+
+            wait = _RETRY_DELAYS[attempt - 1]
+            if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429:
+                try:
+                    wait = exc.response.json()["parameters"]["retry_after"]
+                except Exception:
+                    pass
+            time.sleep(wait)
+
+    return False
 
 
 # ---------------------------------------------------------------------------

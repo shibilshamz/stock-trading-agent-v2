@@ -241,11 +241,13 @@ def run_once():
     paper_state.json is restored from GHA cache before this runs.
     """
     now        = ist_now()
+    today      = now.date()
     now_time   = now.time()
     market_day = now.weekday() < 5
     eod_t      = parse_ist_time(EOD_SUMMARY_TIME)
     morning_open_t = parse_ist_time(MARKET_OPEN_TIME)
     morning_end_t  = parse_ist_time("10:00")
+    cutoff_t   = parse_ist_time("16:00")
 
     logger.info("GitHub Actions mode — single scan cycle (%s IST)", now.strftime("%H:%M"))
 
@@ -258,13 +260,31 @@ def run_once():
         logger.info("Pre-market at %s IST — no action. Exiting.", now.strftime("%H:%M"))
         return
 
-    # Hard cutoff: GHA jobs can be delayed 2+ hours in queue.
-    # Any job arriving after 16:00 IST is stale — skip entirely.
-    if now_time >= parse_ist_time("16:00"):
-        logger.info("Past 16:00 IST hard cutoff (queue-delay guard) — exiting.")
-        return
+    # Hard cutoff: GHA jobs can be delayed 2+ hours in queue. Skip live
+    # scanning/trading on stale data past this point — but the EOD summary
+    # still needs to go out below if this delayed run is the only one to arrive.
+    past_cutoff = now_time >= cutoff_t
+    if past_cutoff:
+        logger.info("Past 16:00 IST hard cutoff (queue-delay guard) — skipping scan.")
 
     trader = PaperTrader(PAPER_BALANCE)
+
+    if past_cutoff:
+        if trader.last_eod_summary_date != today.isoformat():
+            logger.info("EOD summary not yet sent today — sending now despite cutoff.")
+            if trader.positions:
+                logger.info("EOD: force-closing all positions")
+                prices = {}
+                for sym in list(trader.positions.keys()):
+                    p = latest_price(sym)
+                    prices[sym] = p if p else trader.positions[sym]["entry_price"]
+                trader.close_all_positions(prices, reason="EOD")
+            snap = trader.portfolio_snapshot({})
+            alert_market_close(snap)
+            trader.mark_eod_summary_sent(today)
+        else:
+            logger.info("EOD summary already sent today — exiting.")
+        return
 
     try:
         universe = get_trading_universe()
@@ -287,8 +307,8 @@ def run_once():
             logger.error("Scan error: %s", exc)
             alert_error("run_scan", str(exc))
 
-        # EOD: force-close all positions then send single closing summary
-        if now_time >= eod_t:
+        # EOD: force-close all positions then send single closing summary (once per day)
+        if now_time >= eod_t and trader.last_eod_summary_date != today.isoformat():
             if trader.positions:
                 logger.info("EOD: force-closing all positions")
                 prices = {}
@@ -299,6 +319,7 @@ def run_once():
             logger.info("EOD: sending market close summary")
             snap = trader.portfolio_snapshot({})
             alert_market_close(snap)
+            trader.mark_eod_summary_sent(today)
 
     logger.info("GitHub Actions scan complete — exiting cleanly.")
 # ---------------------------------------------------------------------------
